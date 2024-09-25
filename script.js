@@ -1,26 +1,26 @@
 const AudioContext = window.AudioContext
 
-var activeSource = null
-var gainNode = null
+var sampleRate = 44100
+
+var context = new AudioContext({ latencyHint: "interactive", sampleRate: sampleRate })
+
+var activeSource = context.createBufferSource()
+var gainNode = context.createGain()
 
 document.addEventListener("DOMContentLoaded", () => {
     var button = document.getElementById("HUH")
     button.onclick = function()
     {
-        var frequency = 300 + 200 * Math.random();
-        var sampleRate = 44100;
+        var frequency = 200 + 200 * Math.random()
         var time = 1.0
         var sampleCount = Math.round(time * sampleRate)
 
-        var buffer = math.zeros(sampleCount);
+        var buffer = math.zeros(sampleCount)
 
         for (var i = 0; i < sampleCount; i++) 
         {
-            buffer[i] = Math.sin(frequency * Math.PI * 2 * (i / sampleRate))
+            buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
         }
-
-        //console.log(buffer)
-        //console.log(math.fft(buffer))
 
         playBufferMatrix(buffer, sampleRate, true)
     }
@@ -46,16 +46,11 @@ function playBufferMatrix(bufferMatrix, sampleRate = 44100, loop = false)
 
 
 function playBuffer(buffer, sampleRate = 44100, loop = false) {
-    var context = new AudioContext({ latencyHint: "interactive", sampleRate: sampleRate })
-        
     var audioBuffer = context.createBuffer(1, buffer.length, sampleRate)
     audioBuffer.copyToChannel(buffer, 0)
-    audioBuffer.copyToChannel(buffer, 0)
     
-    if (activeSource != null)
-    {
-        //activeSource.stop()
-    }
+    //if activeSource
+    //activeSource.stop()
     //else{
     gainNode = context.createGain()
     activeSource = context.createBufferSource();
@@ -63,7 +58,13 @@ function playBuffer(buffer, sampleRate = 44100, loop = false) {
 
     activeSource.buffer = audioBuffer; 
     activeSource.loop = loop
+    //activeSource.connect(context.destination)
     activeSource.connect(gainNode);
     gainNode.connect(context.destination)
+    gainNode.gain.setValueAtTime(0.9, context.currentTime)
+    console.log(gainNode.gain)
     activeSource.start();
+
+    //gainNode.gain.exponentialRampToValueAtTime(0.000001, context.currentTime + buffer.length / sampleRate)
+    
 }
