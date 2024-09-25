@@ -53,6 +53,25 @@ document.addEventListener("DOMContentLoaded", () => {
             activeSource = null;
         }
     };
+
+    var useBufferButton = document.getElementById("useBuffer");
+    useBufferButton.onclick = function() {
+        if (savedBuffer) {
+            console.log("Using saved buffer:", savedBuffer);
+            //Play the saved buffer again.
+            playBufferMatrix(savedBuffer, 44100, true);
+        } else {
+            console.log("No buffer saved yet.");
+        }
+    };
+
+    var stopButton = document.getElementById("stopButton");
+    stopButton.onclick = function() {
+        if (activeSource) {
+            activeSource.stop();
+            activeSource = null;
+        }
+    };
 })
 
 
