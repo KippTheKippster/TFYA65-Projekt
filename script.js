@@ -7,34 +7,85 @@ var context = new AudioContext({ latencyHint: "interactive", sampleRate: sampleR
 var activeSource = context.createBufferSource()
 var gainNode = context.createGain()
 
+function test(message) {
+    const data = message.data
+    var length = math.fft(math.zeros(4000))._data.length
+    // Response
+    postMessage(data)
+  }
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
     var button = document.getElementById("HUH")
     button.onclick = function()
     {
+          // Dynamic creation of a worker
+            const bytes = new TextEncoder().encode(`self.onmessage = ${test.toString()}`)
+            const blob = new Blob([bytes], {type: 'application/javascript'})
+            const url = URL.createObjectURL(blob)
+            const worker = new Worker(url)
+
+
+            // Set up a listener for messages from the worker
+            worker.onmessage = (message) => {
+                // This is where you receive your worker response
+                console.log("HUIDSAHUDHSui")
+            }
+
+            // Error handling
+            worker.onerror = console.error
+
+            // This message will be passed to the worker
+            worker.postMessage('hello')
+        //var worker = new Worker('./workers/bufferQueue.js');
+        
+        //worker.addEventListener('message', function(e) {
+        //    console.log(e.data);
+        //})
+        
+        //worker.postMessage('Happy Birthday');
+
+        /*
         var frequency = 200 + 200 * Math.random()
-        var time = 0.14
+        var time = 0.3
         var sampleCount = Math.round(time * sampleRate)
 
-        var buffer = math.zeros(140)
+        var n = sampleCount + 50000
+
+        var buffer = math.zeros(n)
 
         for (var i = 0; i < sampleCount; i++) 
         {
-            //buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
+            buffer._data[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
         }
 
-        for (var i = 0; i <= 70; i++)
+        console.table(buffer._data)
+   
+        var echo = math.zeros(n)
+        for (var i = 0; i < n; i += 10000)
         {
-            buffer[i] = 1
+            echo._data[i] = 1.0
         }
+        echo._data[n-1] = 1.0
     
-    
-        for (var i = 0; i <= 70; i++)
+        var f_buffer = math.fft(buffer)
+        var f_echo = math.fft(echo)
+
+        var f_final = math.zeros(n)
+        for (var i = 0; i < f_final._data.length; i++)
         {
-            buffer[i + 70] = -1
+            f_final._data[i] = math.multiply(f_buffer._data[i], f_echo._data[i])
         }
 
-        playBufferMatrix(buffer, sampleRate, true)
+
+        var final = math.re(math.ifft(f_final))
+        console.table(final)
+        playBufferMatrix(final, sampleRate, false)
+        */
+
     }
+
     var useBufferButton = document.getElementById("useBuffer");
     useBufferButton.onclick = function() {
         if (savedBuffer) {
@@ -65,6 +116,31 @@ function matrixToFloat32Array(matrix)
         array[i] = matrix[i]
     }
     return array
+}
+
+
+function playFile(path)
+{
+    var audio = new Audio('ljud-bonk-1.wav');
+    audio.play()
+    console.log(audio.buffered)
+    /*
+    window
+        .fetch(path)
+        .then((response) => {
+            if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            return response.blob();
+        })
+        */
+    //var blob = Blob()
+    //FileReader.readAsArrayBuffer()
+    //context.decodeAudioData(arrayBuffer, function(buffer) {
+    //    buf = buffer;
+    //    play();
+    //});
 }
 
 
