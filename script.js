@@ -12,14 +12,25 @@ document.addEventListener("DOMContentLoaded", () => {
     button.onclick = function()
     {
         var frequency = 200 + 200 * Math.random()
-        var time = 1.0
+        var time = 0.14
         var sampleCount = Math.round(time * sampleRate)
 
-        var buffer = math.zeros(sampleCount)
+        var buffer = math.zeros(140)
 
         for (var i = 0; i < sampleCount; i++) 
         {
-            buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
+            //buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
+        }
+
+        for (var i = 0; i <= 70; i++)
+        {
+            buffer[i] = 1
+        }
+    
+    
+        for (var i = 0; i <= 70; i++)
+        {
+            buffer[i + 70] = -1
         }
 
         playBufferMatrix(buffer, sampleRate, true)
@@ -36,6 +47,24 @@ function matrixToFloat32Array(matrix)
         array[i] = matrix[i]
     }
     return array
+}
+
+
+function playOscillator(frequency, type = "square")
+{
+    var oscillator = audioContext.createOscillator();
+    oscillator.connect(gainNode);
+  
+    if (type === "custom") {
+        oscillator.setPeriodicWave(customWaveform);
+    } else {
+        oscillator.type = type;
+    }
+  
+    oscillator.frequency.value = frequency;
+    oscillator.start();
+  
+    return oscillator;
 }
 
 
@@ -59,12 +88,11 @@ function playBuffer(buffer, sampleRate = 44100, loop = false) {
     activeSource.buffer = audioBuffer; 
     activeSource.loop = loop
     //activeSource.connect(context.destination)
+    gainNode.gain.setValueAtTime(0.9, context.currentTime)
     activeSource.connect(gainNode);
     gainNode.connect(context.destination)
-    gainNode.gain.setValueAtTime(0.9, context.currentTime)
-    console.log(gainNode.gain)
     activeSource.start();
 
     //gainNode.gain.exponentialRampToValueAtTime(0.000001, context.currentTime + buffer.length / sampleRate)
-    
+    return activeSource
 }
