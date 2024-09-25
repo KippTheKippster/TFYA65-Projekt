@@ -1,0 +1,11 @@
+body {
+    background-color: rgb(218, 236, 238);
+  }
+
+  #rectangle{
+    width:70%;
+    height:5%;
+    position:fixed;
+    margin: auto;
+    background:rgba(0, 0, 255, 0.05);
+}
