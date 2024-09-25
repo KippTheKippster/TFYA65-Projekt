@@ -5,6 +5,9 @@ var context = new AudioContext({ latencyHint: "interactive", sampleRate: sampleR
 var activeSource = context.createBufferSource()
 var gainNode = context.createGain()
 
+var odd = 3;
+var int_count = 2;
+
 document.addEventListener("DOMContentLoaded", () => {
     var button = document.getElementById("HUH")
     button.onclick = function()
@@ -26,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
         savedBuffer = buffer;
         savedFrequency = frequency;
         playBufferMatrix(buffer, sampleRate, true);
+        console.log("Current frequency:", frequency);
     }
 
     var useBufferButton = document.getElementById("useBuffer");
@@ -43,10 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
     //harmonics are achived by multiplying the frequency by an odd integer
     useBufferButton2.onclick = function() {
         var time = 0.14;
-        var odd = 3;
         if (savedBuffer) {
             var harmonicsBuffer = makeBuffer(savedFrequency*odd, time, sampleRate);
             playBufferMatrix(harmonicsBuffer, 44100, true);
+            console.log("current:frequency", savedFrequency*odd);
             odd += 2;
         } else {
             console.log("No buffer saved yet.");
@@ -56,11 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
     var useBufferButton3 = document.getElementById("playUndertones");
     //undertones are achived by dividing the frequency by an integer
     useBufferButton3.onclick = function() {
-        int_count = 2;
         var time = 0.14;
         if (savedBuffer) {
             var undertonesBuffer = makeBuffer(savedFrequency/int_count, time, sampleRate);
             playBufferMatrix(undertonesBuffer, 44100, true);
+            console.log("current:frequency", savedFrequency/int_count);
+            int_count += 1;
         } else {
             console.log("No buffer saved yet.");
         }
