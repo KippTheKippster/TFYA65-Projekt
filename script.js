@@ -1,9 +1,7 @@
 const AudioContext = window.AudioContext
 
 var sampleRate = 44100
-
 var context = new AudioContext({ latencyHint: "interactive", sampleRate: sampleRate })
-
 var activeSource = context.createBufferSource()
 var gainNode = context.createGain()
 
@@ -11,18 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
     var button = document.getElementById("HUH")
     button.onclick = function()
     {
-        var frequency = 200 + 200 * Math.random()
-        var time = 0.14
-        var sampleCount = Math.round(time * sampleRate)
+        var frequency = 200 + 200 * Math.random();
+        var time = 0.14;
+        var buffer = makeBuffer(frequency, time, sampleRate);
 
-        var buffer = math.zeros(140)
-
-        for (var i = 0; i < sampleCount; i++) 
-        {
-            //buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
-        }
-
-        for (var i = 0; i <= 70; i++)
+        /*for (var i = 0; i <= 70; i++)
         {
             buffer[i] = 1
         }
@@ -31,16 +22,45 @@ document.addEventListener("DOMContentLoaded", () => {
         for (var i = 0; i <= 70; i++)
         {
             buffer[i + 70] = -1
-        }
-
-        playBufferMatrix(buffer, sampleRate, true)
+        }*/
+        savedBuffer = buffer;
+        savedFrequency = frequency;
+        playBufferMatrix(buffer, sampleRate, true);
     }
+
     var useBufferButton = document.getElementById("useBuffer");
     useBufferButton.onclick = function() {
         if (savedBuffer) {
             console.log("Using saved buffer:", savedBuffer);
             //Play the saved buffer again.
             playBufferMatrix(savedBuffer, 44100, true);
+        } else {
+            console.log("No buffer saved yet.");
+        }
+    };
+
+    var useBufferButton2 = document.getElementById("playHarmonics");
+    //harmonics are achived by multiplying the frequency by an odd integer
+    useBufferButton2.onclick = function() {
+        var time = 0.14;
+        var odd = 3;
+        if (savedBuffer) {
+            var harmonicsBuffer = makeBuffer(savedFrequency*odd, time, sampleRate);
+            playBufferMatrix(harmonicsBuffer, 44100, true);
+            odd += 2;
+        } else {
+            console.log("No buffer saved yet.");
+        }
+    };
+
+    var useBufferButton3 = document.getElementById("playUndertones");
+    //undertones are achived by dividing the frequency by an integer
+    useBufferButton3.onclick = function() {
+        int_count = 2;
+        var time = 0.14;
+        if (savedBuffer) {
+            var undertonesBuffer = makeBuffer(savedFrequency/int_count, time, sampleRate);
+            playBufferMatrix(undertonesBuffer, 44100, true);
         } else {
             console.log("No buffer saved yet.");
         }
@@ -55,6 +75,27 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 })
 
+function makeBuffer(frequency, time, sampleRate) {
+    var sampleCount = Math.round(time * sampleRate);
+    var buffer = math.zeros(140);
+    for (var i = 0; i < sampleCount; i++) 
+        {
+            buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
+        }
+    return buffer;
+}
+
+function estimateFrequency(buffer, sampleRate) {
+    // Perform FFT
+    const fft = new FFT(buffer.length);
+    const fftResult = fft.forward(buffer);
+    const magnitude = fftResult.map(complex => Math.sqrt(complex.real * complex.real + complex.imag * complex.imag));
+    const peakIndex = magnitude.indexOf(Math.max(...magnitude));
+    
+    // Calculate the frequency
+    const frequency = peakIndex * sampleRate / buffer.length;
+    return frequency;
+}
 
 function matrixToFloat32Array(matrix) 
 {
