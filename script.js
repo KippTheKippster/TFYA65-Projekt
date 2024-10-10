@@ -69,11 +69,11 @@ function closePopup() {
 // Add event listener to the stop button
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('stopButton').addEventListener('click', function(){
-        activeOscillators.forEach(oscillator => oscillator.stop());
+        activeOscillators.forEach(osc => osc.oscillator.stop());
         activeOscillators = [];
         console.log('All sounds stopped. Active oscillators: ' + activeOscillators.length);
         updateOscillatorQueue();
-    }
+    });
     document.getElementById('startButton').addEventListener('click', function()
     {
         playSound(
