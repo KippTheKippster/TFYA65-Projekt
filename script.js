@@ -1,162 +1,76 @@
-const AudioContext = window.AudioContext
+// Create an AudioContext
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-var sampleRate = 44100
-var context = new AudioContext({ latencyHint: "interactive", sampleRate: sampleRate })
-var activeSource = context.createBufferSource()
-var gainNode = context.createGain()
+// List to keep track of active oscillators
+let activeOscillators = [];
 
-var odd = 3;
-var int_count = 2;
+// Function to play a sound
+function playSound() {
+    // Get the frequency and hold time from the input fields
+    const frequency = document.getElementById('frequency').value;
+    const holdTime = document.getElementById('holdTime').value;
 
-document.addEventListener("DOMContentLoaded", () => {
-    var button = document.getElementById("HUH")
-    button.onclick = function()
-    {
-        var frequency = 200 + 200 * Math.random();
-        var time = 0.14;
-        var buffer = makeBuffer(frequency, time, sampleRate);
+    // Create an OscillatorNode
+    const oscillator = audioContext.createOscillator();
+    oscillator.type = 'sine'; // Type of wave: sine, square, sawtooth, triangle
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
 
-        /*for (var i = 0; i <= 70; i++)
-        {
-            buffer[i] = 1
-        }
-    
-    
-        for (var i = 0; i <= 70; i++)
-        {
-            buffer[i + 70] = -1
-        }*/
-        savedBuffer = buffer;
-        savedFrequency = frequency;
-        playBufferMatrix(buffer, sampleRate, true);
-        console.log("Current frequency:", frequency);
-    }
+    // Connect the oscillator to the destination (speakers)
+    oscillator.connect(audioContext.destination);
 
-    var useBufferButton = document.getElementById("useBuffer");
-    useBufferButton.onclick = function() {
-        if (savedBuffer) {
-            console.log("Using saved buffer:", savedBuffer);
-            //Play the saved buffer again.
-            playBufferMatrix(savedBuffer, 44100, true);
-        } else {
-            console.log("No buffer saved yet.");
-        }
-    };
-
-    var useBufferButton2 = document.getElementById("playHarmonics");
-    //harmonics are achived by multiplying the frequency by an odd integer
-    useBufferButton2.onclick = function() {
-        var time = 0.14;
-        if (savedBuffer) {
-            var harmonicsBuffer = makeBuffer(savedFrequency*odd, time, sampleRate);
-            playBufferMatrix(harmonicsBuffer, 44100, true);
-            console.log("current:frequency", savedFrequency*odd);
-            odd += 2;
-        } else {
-            console.log("No buffer saved yet.");
-        }
-    };
-
-    var useBufferButton3 = document.getElementById("playUndertones");
-    //undertones are achived by dividing the frequency by an integer
-    useBufferButton3.onclick = function() {
-        var time = 0.14;
-        if (savedBuffer) {
-            var undertonesBuffer = makeBuffer(savedFrequency/int_count, time, sampleRate);
-            playBufferMatrix(undertonesBuffer, 44100, true);
-            console.log("current:frequency", savedFrequency/int_count);
-            int_count += 1;
-        } else {
-            console.log("No buffer saved yet.");
-        }
-    };
-
-    var stopButton = document.getElementById("stopButton");
-    stopButton.onclick = function() {
-        if (activeSource) {
-            activeSource.stop();
-            activeSource = null;
-        }
-    };
-})
-
-function makeBuffer(frequency, time, sampleRate) {
-    var sampleCount = Math.round(time * sampleRate);
-    var buffer = math.zeros(140);
-    for (var i = 0; i < sampleCount; i++) 
-        {
-            buffer[i] = math.round((Math.sin(frequency * Math.PI * 2 * (i / sampleRate)) + 1) / 2.0)
-        }
-    return buffer;
-}
-
-function estimateFrequency(buffer, sampleRate) {
-    // Perform FFT
-    const fft = new FFT(buffer.length);
-    const fftResult = fft.forward(buffer);
-    const magnitude = fftResult.map(complex => Math.sqrt(complex.real * complex.real + complex.imag * complex.imag));
-    const peakIndex = magnitude.indexOf(Math.max(...magnitude));
-    
-    // Calculate the frequency
-    const frequency = peakIndex * sampleRate / buffer.length;
-    return frequency;
-}
-
-function matrixToFloat32Array(matrix) 
-{
-    let array = new Float32Array(math.size(matrix)._data[0])
-
-    for (let i = 0; i < array.length; i++)
-    {
-        array[i] = matrix[i]
-    }
-    return array
-}
-
-
-function playOscillator(frequency, type = "square")
-{
-    var oscillator = audioContext.createOscillator();
-    oscillator.connect(gainNode);
-  
-    if (type === "custom") {
-        oscillator.setPeriodicWave(customWaveform);
-    } else {
-        oscillator.type = type;
-    }
-  
-    oscillator.frequency.value = frequency;
+    // Start the oscillator
     oscillator.start();
-  
-    return oscillator;
+
+    // Add the oscillator to the list of active oscillators with its start time and hold time
+    const startTime = audioContext.currentTime;
+    activeOscillators.push({ oscillator, frequency, startTime, holdTime });
+
+    // Stop the oscillator after the specified hold time
+    setTimeout(() => {
+        oscillator.stop();
+        // Remove the oscillator from the list of active oscillators
+        activeOscillators = activeOscillators.filter(osc => osc.oscillator !== oscillator);
+        updateOscillatorQueue();
+    }, holdTime);
+
+    // Update the oscillator queue display
+    updateOscillatorQueue();
 }
 
 
-function playBufferMatrix(bufferMatrix, sampleRate = 44100, loop = false)
-{
-    playBuffer(matrixToFloat32Array(bufferMatrix), sampleRate, loop);
+// Function to stop all active oscillators
+function stopAllSounds() {
+    activeOscillators.forEach(oscillator => oscillator.stop());
+    activeOscillators = [];
+    console.log('All sounds stopped. Active oscillators: ' + activeOscillators.length);
+    updateOscillatorQueue();
 }
 
+// Periodically update the oscillator queue display
+setInterval(updateOscillatorQueue, 500);
 
-function playBuffer(buffer, sampleRate = 44100, loop = false) {
-    var audioBuffer = context.createBuffer(1, buffer.length, sampleRate)
-    audioBuffer.copyToChannel(buffer, 0)
-    
-    //if activeSource
-    //activeSource.stop()
-    //else{
-    gainNode = context.createGain()
-    activeSource = context.createBufferSource();
-    //}
+function updateOscillatorQueue() {
+    console.log("Updating queue..."); // Debugging line to check if the function is being called.
+    const textArea = document.getElementById('oscillatorQueue');
+    const currentTime = audioContext.currentTime;
 
-    activeSource.buffer = audioBuffer; 
-    activeSource.loop = loop
-    //activeSource.connect(context.destination)
-    gainNode.gain.setValueAtTime(0.9, context.currentTime)
-    activeSource.connect(gainNode);
-    gainNode.connect(context.destination)
-    activeSource.start();
+    activeOscillators.sort((a, b) => {
+        const remainingTimeA = (a.startTime + a.holdTime / 1000) - currentTime;
+        const remainingTimeB = (b.startTime + b.holdTime / 1000) - currentTime;
+        return remainingTimeA - remainingTimeB;
+    });
 
-    //gainNode.gain.exponentialRampToValueAtTime(0.000001, context.currentTime + buffer.length / sampleRate)
-    return activeSource
+    textArea.value = activeOscillators.map((osc, index) => {
+        const remainingTime = ((osc.startTime + osc.holdTime / 1000) - currentTime).toFixed(2);
+        return `${index + 1}: Frequency: ${osc.frequency} Hz, Remaining Time: ${remainingTime} s`;
+    }).join('\n');
 }
+
+// Function to close the popup
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    document.getElementById('popup-overlay').style.display = 'none';
+}
+
+// Add event listener to the stop button
+document.getElementById('stopButton').addEventListener('click', stopAllSounds);

@@ -16,10 +16,12 @@
         <div id="popup-overlay"></div>
 
     <!-- Popup content -->
+<!-- Commented out for now
     <div id="popup">
         <p>Welcome to our page! info is coming </p>
         <button id="popup_close" onclick="closePopup()">Close</button>
     </div>
+-->
 
     <script>
         // Function to show the popup
@@ -37,12 +39,21 @@
 
     <div id="buttons">
         <h1>Epic Arpeggiator</h1>
-        <button id="HUH">Generate & play Buffer</button>
-        <button id="useBuffer">Use previous Buffer</button>
-        <button id="playHarmonics">play Harmonics</button>
-        <button id="playUndertones">play Undertones</button>
+        <!-- Input fields for frequency and hold time -->
+        <label for="frequency">Frequency (Hz):</label>
+        <input type="number" id="frequency" name="frequency" value="440">
+        <label for="holdTime">Hold Time (ms):</label>
+        <input type="number" id="holdTime" name="holdTime" value="2000">
+
+         <!-- Button to play sound -->
+        <button onclick="playSound()">Play Sound (Web Audio API)</button>
+        <button id="playHarmonics">Play Harmonics (of the last)</button>
+        <button id="playUndertones">Play Undertones</button>
         <button id="stopButton">Stop</button>
     </div>
+
+     <!-- Text area to display active oscillators -->
+     <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
     
     <footer>
         <p>Footer</p>
