@@ -21,7 +21,7 @@ body {
 }
 
 #frequency, #holdTime {
-  width: 50px;
+  width: 60px;
   padding: 5px; 
   font-size: 14px;
 }
