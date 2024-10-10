@@ -37,10 +37,7 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
 
 // Function to stop all active oscillators
 function stopAllSounds() {
-    activeOscillators.forEach(oscillator => oscillator.stop());
-    activeOscillators = [];
-    console.log('All sounds stopped. Active oscillators: ' + activeOscillators.length);
-    updateOscillatorQueue();
+    
 }
 
 // Periodically update the oscillator queue display
@@ -71,7 +68,12 @@ function closePopup() {
 
 // Add event listener to the stop button
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('stopButton').addEventListener('click', stopAllSounds);
+    document.getElementById('stopButton').addEventListener('click', function(){
+        activeOscillators.forEach(osc => osc.oscillator.stop());
+        activeOscillators = [];
+        console.log('All sounds stopped. Active oscillators: ' + activeOscillators.length);
+        updateOscillatorQueue();
+    });
     document.getElementById('startButton').addEventListener('click', function()
     {
         playSound(
