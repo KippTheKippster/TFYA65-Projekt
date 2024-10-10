@@ -1,15 +1,20 @@
 <!doctype html>
 <html>
-    <link rel="stylesheet" href="index.css">
 
 <head>
-    <div id="TopDiv">
-
         <title>Epic Arpeggiator</title>
+        
+        <!-- Makes the page responsive on all devices -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <!-- External libraries and scripts -->
         <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
         <script src="script.js"></script>
-    </div> 
+        
+        <!--css file-->
+        <link rel="stylesheet" href="index.css">
 
+       
 </head>
   
 <body>
@@ -36,9 +41,13 @@
             document.getElementById('popup-overlay').style.display = 'none';
         }
     </script>
-
+  
+  
+  <div id="TopDiv">
+        <h1>  Epic Arpeggiator</h1>
+    </div>
+  
     <div id="buttons">
-        <h1>Epic Arpeggiator</h1>
         <!-- Input fields for frequency and hold time -->
         <label for="frequency">Frequency (Hz):</label>
         <input type="number" id="frequency" name="frequency" value="440">
@@ -46,10 +55,10 @@
         <input type="number" id="holdTime" name="holdTime" value="2000">
 
          <!-- Button to play sound -->
-        <button id="startButton">Play Sound (Web Audio API)</button>
-        <button id="playHarmonics">Play Harmonics (of the last)</button>
-        <button id="playUndertones">Play Undertones</button>
-        <button id="stopButton">Stop</button>
+        <button class="button" id="startButton">Play Sound (Web Audio API)</button>
+        <button class="button" id="playHarmonics">Play Harmonics (of the last)</button>
+        <button class="button" id="playUndertones">Play Undertones</button>
+        <button class="button" id="stopButton">Stop</button>
     </div>
 
      <!-- Text area to display active oscillators -->
