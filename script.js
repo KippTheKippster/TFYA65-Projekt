@@ -5,11 +5,8 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let activeOscillators = [];
 
 // Function to play a sound
-function playSound() {
-    // Get the frequency and hold time from the input fields
-    const frequency = document.getElementById('frequency').value;
-    const holdTime = document.getElementById('holdTime').value;
-
+function playSound(frequency = 440.0, holdTime = 1000.0) {
+    console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
     // Create an OscillatorNode
     const oscillator = audioContext.createOscillator();
     oscillator.type = 'sine'; // Type of wave: sine, square, sawtooth, triangle
@@ -73,4 +70,28 @@ function closePopup() {
 }
 
 // Add event listener to the stop button
-document.getElementById('stopButton').addEventListener('click', stopAllSounds);
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('stopButton').addEventListener('click', stopAllSounds);
+    document.getElementById('startButton').addEventListener('click', function()
+    {
+        playSound(
+            document.getElementById('frequency').value,
+            document.getElementById('holdTime').value
+        )
+    })
+    //startArpeggiator()
+})
+
+const freqs = [174.6, 220.0, 329.6]
+let arpeggiatorInterval
+let noteIndex = 0
+
+function startArpeggiator()
+{
+    arpeggiatorInterval = setInterval(playNextNote)
+}
+
+function playNextNote()
+{
+
+}
