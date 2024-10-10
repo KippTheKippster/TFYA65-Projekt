@@ -3,6 +3,8 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 // List to keep track of active oscillators
 let activeOscillators = [];
+let addUndertoneCounter = 0;
+let addOvertoneCounter = 0;
 
 // Function to play a sound
 function playSound(frequency = 440.0, holdTime = 1000.0) {
@@ -37,7 +39,12 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
 
 // Function to stop all active oscillators
 function stopAllSounds() {
-    
+    activeOscillators.forEach(osc => osc.oscillator.stop());
+    activeOscillators = [];
+    console.log('All sounds stopped. Active oscillators: ' + activeOscillators.length);
+    updateOscillatorQueue();
+    addUndertoneCounter = 0;
+    addOvertoneCounter = 0;
 }
 
 // Periodically update the oscillator queue display
@@ -66,34 +73,93 @@ function closePopup() {
     document.getElementById('popup-overlay').style.display = 'none';
 }
 
-// Add event listener to the stop button
+// Add event listener to the buttons
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('stopButton').addEventListener('click', function(){
-        activeOscillators.forEach(osc => osc.oscillator.stop());
-        activeOscillators = [];
-        console.log('All sounds stopped. Active oscillators: ' + activeOscillators.length);
-        updateOscillatorQueue();
+    document.getElementById('stopButton').addEventListener('click', function () {
+        stopAllSounds();
     });
-    document.getElementById('startButton').addEventListener('click', function()
-    {
+    document.getElementById('startButton').addEventListener('click', function () {
         playSound(
             document.getElementById('frequency').value,
             document.getElementById('holdTime').value
         )
     })
     //startArpeggiator()
+    document.getElementById('addHarmonic').addEventListener('click', function () {
+        addOvertone();
+    })
+    document.getElementById('addUndertone').addEventListener('click', function () {
+        addUndertone();
+    })
 })
 
 const freqs = [174.6, 220.0, 329.6]
 let arpeggiatorInterval
 let noteIndex = 0
 
-function startArpeggiator()
-{
+function startArpeggiator() {
     arpeggiatorInterval = setInterval(playNextNote)
 }
 
-function playNextNote()
-{
+function playNextNote() {
 
+}
+
+function checkUniqueActiveOscillators() {
+    // make a set (all elements of the set are unique)
+    const uniqueFrequencies = new Set();
+    const uniqueFrequencies_Time = new Set();
+
+    // Loop through activeOscillators and add frequencies to the Set
+    for (const oscillator of activeOscillators) {
+        uniqueFrequencies.add(oscillator.frequency);
+        uniqueFrequencies_Time.add(oscillator.holdTime - oscillator.startTime);
+    }
+    // Convert the Set to an array if needed
+    const uniqueFrequenciesArray = Array.from(uniqueFrequencies);
+    const uniqueFrequenciesArray_Time = Array.from(uniqueFrequencies_Time);
+    console.log("unique frequencies: " + uniqueFrequenciesArray);
+    return [uniqueFrequencies, uniqueFrequenciesArray, uniqueFrequenciesArray_Time];
+}
+
+function addUndertone() {
+    if (activeOscillators.length === 0) {
+        console.error("No active oscillators to add undertone to.");
+        return;
+    }
+
+    const baseFrequency = activeOscillators[0].frequency;
+    const remainingHoldTime = (activeOscillators[0].holdTime - (audioContext.currentTime - activeOscillators[0].startTime) * 1000);
+
+    if (remainingHoldTime <= 0) {
+        console.error("No remaining hold time for the active oscillator.");
+        return;
+    }
+
+    const undertoneFrequency = baseFrequency / (addUndertoneCounter + 2);
+    console.log(`Base Frequency: ${baseFrequency}, Counter: ${addUndertoneCounter}, Undertone Frequency: ${undertoneFrequency}, Remaining Hold Time: ${remainingHoldTime}`);
+    
+    playSound(undertoneFrequency, remainingHoldTime);
+    console.log("Added undertone frequency:", undertoneFrequency);
+    addUndertoneCounter += 1;
+}
+
+function addOvertone() {
+    if (activeOscillators.length === 0) {
+        console.error("No active oscillators to add overtone to.");
+        return;
+    }
+
+    const baseFrequency = activeOscillators[0].frequency;
+    const remainingHoldTime = (activeOscillators[0].holdTime - (audioContext.currentTime - activeOscillators[0].startTime) * 1000);
+
+    if (remainingHoldTime <= 0) {
+        console.error("No remaining hold time for the active oscillator.");
+        return;
+    }
+
+    const overtoneFrequency = baseFrequency * (addOvertoneCounter + 2);
+    playSound(overtoneFrequency, remainingHoldTime);
+    console.log("Added overtone frequency:", overtoneFrequency);
+    addOvertoneCounter += 1;
 }

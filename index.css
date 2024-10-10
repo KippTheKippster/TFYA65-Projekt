@@ -20,7 +20,7 @@ body {
   line-height: 50px;
 }
 
-#frequency, #holdTime {
+#frequency, #holdTime, #playUndertones, #playOvertones {
   width: 60px;
   padding: 5px; 
   font-size: 14px;
