@@ -10,6 +10,13 @@ let addOvertoneCounter = 0;
 const gainNode = audioContext.createGain();
 gainNode.connect(audioContext.destination);
 
+const analyser = audioContext.createAnalyser();
+analyser.fftSize = 1024; 
+const bufferLength = analyser.frequencyBinCount; 
+const dataArray= new Uint8Array(bufferLength); 
+
+
+
 // Function to play a sound
 function playSound(frequency = 440.0, holdTime = 1000.0) {
     console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
@@ -17,6 +24,13 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
     const oscillator = audioContext.createOscillator();
     oscillator.type = 'sine'; // Type of wave: sine, square, sawtooth, triangle
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    // Connect the oscillator to the analyser and then to the destination
+    oscillator.connect(analyser); 
+    analyser.connect(audioContext.destination); 
     oscillator.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
     // Connect the oscillator to the destination (speakers)
     //oscillator.connect(audioContext.destination);
@@ -38,6 +52,45 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
 
     // Update the oscillator queue display
     updateOscillatorQueue();
+    drawWaveform(); 
+}
+
+// Function to set volume
+function setVolume(volume) {
+    // Ensure the volume is within the range of 1 to 100
+    if (volume < 1 || volume > 100) {
+        console.error('Volume must be between 1 and 100');
+        return;
+    }
+
+    // Convert the volume from 1-100 to 0-1
+    gainNode.gain.value = volume / 100;
+}
+
+function addVibrato(positionInArray) {
+    // Retrieve the oscillator and the necessary data from the array
+    const oscillator = activeOscillators[positionInArray].oscillator;
+
+    // Create an LFO (low-frequency oscillator) for vibrato
+    const vibratoOscillator = audioContext.createOscillator(); // LFO oscillator
+    vibratoOscillator.frequency.value = 5; // Set vibrato frequency (5 Hz is common for vibrato)
+
+    // Create a gain node to control the vibrato depth
+    const vibratoGain = audioContext.createGain();
+    vibratoGain.gain.value = 2; // Vibrato depth (2 Hz range around the base frequency)
+
+    // Connect the LFO to the gain node
+    vibratoOscillator.connect(vibratoGain);
+
+    // Connect the gain node to the oscillator's frequency
+    vibratoGain.connect(oscillator.frequency);
+
+    // Start the vibrato
+    vibratoOscillator.start();
+
+    // Optional: Store the LFO oscillator so you can stop or modify it later
+    activeOscillators[positionInArray].vibratoOscillator = vibratoOscillator;
+    console.log("Vibrato added to oscillator at position", positionInArray);
 }
 
 // Function to set volume
@@ -213,4 +266,40 @@ function addOvertone() {
     playSound(overtoneFrequency, remainingHoldTime);
     console.log("Added overtone frequency:", overtoneFrequency);
     addOvertoneCounter += 1;
+}
+
+function drawWaveform(){
+    const canvas = document.getElementById('oscilloscope');
+    const canvasCtx = canvas.getContext ('2d'); 
+
+    function draw (){
+        requestAnimationFrame(draw); 
+        analyser.getByteTimeDomainData(dataArray); 
+
+        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0,0,canvas.clientWidth, canvas.height);
+
+        canvasCtx.lineWidth = 2; 
+        canvasCtx.strokeStyle = 'rgb(0,0,0)'; 
+        canvasCtx.beginPath(); 
+
+        const sliceWidth = canvas.width * 1.0 / bufferLength; 
+        let x = 0; 
+        for ( let i = 0; i < bufferLength ; i++){
+            const v = dataArray[i] / 128.0; 
+            const y = v* canvas.height / 2; 
+
+            if (i == 0) {
+                canvasCtx.moveTo(x, y); // Corrected here
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+
+            x += sliceWidth; 
+        }
+        canvasCtx.lineTo(canvas.width, canvas.height/2); 
+        canvasCtx.stroke(); 
+
+    }
+    draw(); 
 }
