@@ -52,6 +52,33 @@ function setVolume(volume) {
     gainNode.gain.value = volume / 100;
 }
 
+function addVibrato(positionInArray) {
+    // Retrieve the oscillator and the necessary data from the array
+    const oscillator = activeOscillators[positionInArray].oscillator;
+
+    // Create an LFO (low-frequency oscillator) for vibrato
+    const vibratoOscillator = audioContext.createOscillator(); // LFO oscillator
+    vibratoOscillator.frequency.value = 5; // Set vibrato frequency (5 Hz is common for vibrato)
+
+    // Create a gain node to control the vibrato depth
+    const vibratoGain = audioContext.createGain();
+    vibratoGain.gain.value = 2; // Vibrato depth (2 Hz range around the base frequency)
+
+    // Connect the LFO to the gain node
+    vibratoOscillator.connect(vibratoGain);
+
+    // Connect the gain node to the oscillator's frequency
+    vibratoGain.connect(oscillator.frequency);
+
+    // Start the vibrato
+    vibratoOscillator.start();
+
+    // Optional: Store the LFO oscillator so you can stop or modify it later
+    activeOscillators[positionInArray].vibratoOscillator = vibratoOscillator;
+    console.log("Vibrato added to oscillator at position", positionInArray);
+}
+
+
 // Function to stop all active oscillators
 function stopAllSounds() {
     activeOscillators.forEach(osc => osc.oscillator.stop());
@@ -108,9 +135,13 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     // Add event listener to the volume slider
     const volumeSlider = document.getElementById('volumeSlider');
-        volumeSlider.addEventListener('input', function () {
-            setVolume(this.value);
-        });
+    volumeSlider.addEventListener('input', function () {
+        setVolume(this.value);
+    })
+    // Add event listener to the vibrato button
+    document.getElementById('addVibrato').addEventListener('click', function () {
+        addVibrato(document.getElementById('oscillatorIndex').value);
+    })
 })
 
 const freqs = [174.6, 220.0, 329.6]

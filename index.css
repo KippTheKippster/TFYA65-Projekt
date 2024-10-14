@@ -31,14 +31,20 @@ body {
 
 }
 
-#frequency, #holdTime {
-  width: 50px;
+#frequency, #vibratoFrequency, #vibratoGain, #oscillatorIndex {
+  width: 40px;
+  padding: 5px; 
+  font-size: 14px;
+}
+
+#holdTime {
+  width: 60px;
   padding: 5px; 
   font-size: 14px;
 }
 
 #oscillatorQueue {
-  width: 40vw;
+  width: 50%;
   padding: 5px; 
   font-size: 14px;
 }

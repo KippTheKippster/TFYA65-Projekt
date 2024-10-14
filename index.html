@@ -52,12 +52,19 @@
         <label for="frequency">Frequency (Hz):</label>
         <input type="number" id="frequency" name="frequency" value="440">
         <label for="holdTime">Hold Time (ms):</label>
-        <input type="number" id="holdTime" name="holdTime" value="2000">
+        <input type="number" id="holdTime" name="holdTime" value="5000">
+        <label for="vibratoFrequency">Vibrato Frequency (speed, Hz):</label>
+        <input type="number" id="vibratoFrequency" name="vibratoFrequency" value="5">
+        <label for="vibratoGain ">Vibrato Gain (Pitch Change Hz):</label>
+        <input type="number" id="vibratoGain " name="vibratoGain " value="2">
+        <label for="oscillatorIndex ">Add effect to:</label>    <!--add effect to which index in the oscillator array-->
+        <input type="number" id="oscillatorIndex " name="oscillatorIndex " value="1">
 
         <!-- Button to play sound -->
         <button id="startButton">Play Sound</button>
         <button id="addHarmonic">Add Harmonics</button>
         <button id="addUndertone">Add Undertones</button>
+        <button id="addVibrato">Add Vibrato</button>
         <button id="stopButton">Stop All</button>
 
         <!-- Slider for volume -->
