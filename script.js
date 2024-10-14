@@ -6,6 +6,10 @@ let activeOscillators = [];
 let addUndertoneCounter = 0;
 let addOvertoneCounter = 0;
 
+// Create a GainNode (volume slider)
+const gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination);
+
 // Function to play a sound
 function playSound(frequency = 440.0, holdTime = 1000.0) {
     console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
@@ -13,9 +17,9 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
     const oscillator = audioContext.createOscillator();
     oscillator.type = 'sine'; // Type of wave: sine, square, sawtooth, triangle
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
-
+    oscillator.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
     // Connect the oscillator to the destination (speakers)
-    oscillator.connect(audioContext.destination);
+    //oscillator.connect(audioContext.destination);
 
     // Start the oscillator
     oscillator.start();
@@ -36,6 +40,17 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
     updateOscillatorQueue();
 }
 
+// Function to set volume
+function setVolume(volume) {
+    // Ensure the volume is within the range of 1 to 100
+    if (volume < 1 || volume > 100) {
+        console.error('Volume must be between 1 and 100');
+        return;
+    }
+
+    // Convert the volume from 1-100 to 0-1
+    gainNode.gain.value = volume / 100;
+}
 
 // Function to stop all active oscillators
 function stopAllSounds() {
@@ -91,6 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('addUndertone').addEventListener('click', function () {
         addUndertone();
     })
+    // Add event listener to the volume slider
+    const volumeSlider = document.getElementById('volumeSlider');
+        volumeSlider.addEventListener('input', function () {
+            setVolume(this.value);
+        });
 })
 
 const freqs = [174.6, 220.0, 329.6]
@@ -138,7 +158,7 @@ function addUndertone() {
 
     const undertoneFrequency = baseFrequency / (addUndertoneCounter + 2);
     console.log(`Base Frequency: ${baseFrequency}, Counter: ${addUndertoneCounter}, Undertone Frequency: ${undertoneFrequency}, Remaining Hold Time: ${remainingHoldTime}`);
-    
+
     playSound(undertoneFrequency, remainingHoldTime);
     console.log("Added undertone frequency:", undertoneFrequency);
     addUndertoneCounter += 1;

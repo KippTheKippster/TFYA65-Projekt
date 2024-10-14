@@ -2,26 +2,26 @@
 <html>
 
 <head>
-        <title>Epic Arpeggiator</title>
-        
-        <!-- Makes the page responsive on all devices -->
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
-        <!-- External libraries and scripts -->
-        <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
-        <script src="script.js"></script>
-        
-        <!--css file-->
-        <link rel="stylesheet" href="index.css">
+    <title>Epic Arpeggiator</title>
 
-       
+    <!-- Makes the page responsive on all devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- External libraries and scripts -->
+    <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+    <script src="script.js"></script>
+
+    <!--css file-->
+    <link rel="stylesheet" href="index.css">
+
+
 </head>
-  
+
 <body>
-        <div id="popup-overlay"></div>
+    <div id="popup-overlay"></div>
 
     <!-- Popup content -->
-<!-- Commented out for now
+    <!-- Commented out for now
     <div id="popup">
         <p>Welcome to our page! info is coming </p>
         <button id="popup_close" onclick="closePopup()">Close</button>
@@ -30,7 +30,7 @@
 
     <script>
         // Function to show the popup
-        window.onload = function() {
+        window.onload = function () {
             document.getElementById('popup').style.display = 'block';
             document.getElementById('popup-overlay').style.display = 'block';
         };
@@ -41,12 +41,12 @@
             document.getElementById('popup-overlay').style.display = 'none';
         }
     </script>
-  
-  
-  <div id="TopDiv">
-        <h1>  Epic Arpeggiator</h1>
+
+
+    <div id="TopDiv">
+        <h1> Epic Arpeggiator</h1>
     </div>
-  
+
     <div id="buttons">
         <!-- Input fields for frequency and hold time -->
         <label for="frequency">Frequency (Hz):</label>
@@ -54,19 +54,25 @@
         <label for="holdTime">Hold Time (ms):</label>
         <input type="number" id="holdTime" name="holdTime" value="2000">
 
-         <!-- Button to play sound -->
+        <!-- Button to play sound -->
         <button id="startButton">Play Sound</button>
         <button id="addHarmonic">Add Harmonics</button>
         <button id="addUndertone">Add Undertones</button>
         <button id="stopButton">Stop All</button>
+
+        <!-- Slider for volume -->
+        <label for="volumeSlider">Volume:</label>
+        <input type="range" id="volumeSlider" name="volumeSlider" min="1" max="100" value="50">
+
     </div>
 
-     <!-- Text area to display active oscillators -->
-     <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
-    
+    <!-- Text area to display active oscillators -->
+    <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
+
     <footer>
         <p>Footer</p>
     </footer>
-    
+
 </body>
+
 </html>
