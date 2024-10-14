@@ -6,6 +6,13 @@ let activeOscillators = [];
 let addUndertoneCounter = 0;
 let addOvertoneCounter = 0;
 
+const analyser = audioContext.createAnalyser();
+analyser.fftSize = 1024; 
+const bufferLength = analyser.frequencyBinCount; 
+const dataArray= new Uint8Array(bufferLength); 
+
+
+
 // Function to play a sound
 function playSound(frequency = 440.0, holdTime = 1000.0) {
     console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
@@ -13,6 +20,13 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
     const oscillator = audioContext.createOscillator();
     oscillator.type = 'sine'; // Type of wave: sine, square, sawtooth, triangle
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    // Connect the oscillator to the analyser and then to the destination
+    oscillator.connect(analyser); 
+    analyser.connect(audioContext.destination); 
 
     // Connect the oscillator to the destination (speakers)
     oscillator.connect(audioContext.destination);
@@ -34,6 +48,7 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
 
     // Update the oscillator queue display
     updateOscillatorQueue();
+    drawWaveform(); 
 }
 
 
@@ -162,4 +177,40 @@ function addOvertone() {
     playSound(overtoneFrequency, remainingHoldTime);
     console.log("Added overtone frequency:", overtoneFrequency);
     addOvertoneCounter += 1;
+}
+
+function drawWaveform(){
+    const canvas = document.getElementById('oscilloscope');
+    const canvasCtx = canvas.getContext ('2d'); 
+
+    function draw (){
+        requestAnimationFrame(draw); 
+        analyser.getByteTimeDomainData(dataArray); 
+
+        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0,0,canvas.clientWidth, canvas.height);
+
+        canvasCtx.lineWidth = 2; 
+        canvasCtx.strokeStyle = 'rgb(0,0,0)'; 
+        canvasCtx.beginPath(); 
+
+        const sliceWidth = canvas.width * 1.0 / bufferLength; 
+        let x = 0; 
+        for ( let i = 0; i < bufferLength ; i++){
+            const v = dataArray[i] / 128.0; 
+            const y = v* canvas.height / 2; 
+
+            if (i == 0) {
+                canvasCtx.moveTo(x, y); // Corrected here
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+
+            x += sliceWidth; 
+        }
+        canvasCtx.lineTo(canvas.width, canvas.height/2); 
+        canvasCtx.stroke(); 
+
+    }
+    draw(); 
 }
