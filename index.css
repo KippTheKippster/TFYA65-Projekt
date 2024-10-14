@@ -31,10 +31,14 @@ body {
 
 }
 
-#frequency, #vibratoFrequency, #vibratoGain, #oscillatorIndex {
+#frequency, #oscillatorIndex{
   width: 40px;
   padding: 5px; 
   font-size: 14px;
+}
+
+#vibratoGain, #vibratoFrequency {/* Deema save me <3 */
+  width: 40px;
 }
 
 #holdTime {

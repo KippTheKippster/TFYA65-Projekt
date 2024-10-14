@@ -5,15 +5,16 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let activeOscillators = [];
 let addUndertoneCounter = 0;
 let addOvertoneCounter = 0;
+let positionInArray = null;
 
 // Create a GainNode (volume slider)
 const gainNode = audioContext.createGain();
 gainNode.connect(audioContext.destination);
 
 const analyser = audioContext.createAnalyser();
-analyser.fftSize = 1024; 
-const bufferLength = analyser.frequencyBinCount; 
-const dataArray= new Uint8Array(bufferLength); 
+analyser.fftSize = 1024;
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
 
 
 
@@ -29,8 +30,8 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
     const dataArray = new Uint8Array(bufferLength);
 
     // Connect the oscillator to the analyser and then to the destination
-    oscillator.connect(analyser); 
-    analyser.connect(audioContext.destination); 
+    oscillator.connect(analyser);
+    analyser.connect(audioContext.destination);
     oscillator.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
     // Connect the oscillator to the destination (speakers)
     //oscillator.connect(audioContext.destination);
@@ -52,7 +53,7 @@ function playSound(frequency = 440.0, holdTime = 1000.0) {
 
     // Update the oscillator queue display
     updateOscillatorQueue();
-    drawWaveform(); 
+    drawWaveform();
 }
 
 // Function to set volume
@@ -68,54 +69,34 @@ function setVolume(volume) {
 }
 
 function addVibrato(positionInArray) {
+
     // Retrieve the oscillator and the necessary data from the array
     const oscillator = activeOscillators[positionInArray].oscillator;
 
-    // Create an LFO (low-frequency oscillator) for vibrato
-    const vibratoOscillator = audioContext.createOscillator(); // LFO oscillator
-    vibratoOscillator.frequency.value = 5; // Set vibrato frequency (5 Hz is common for vibrato)
-
-    // Create a gain node to control the vibrato depth
-    const vibratoGain = audioContext.createGain();
-    vibratoGain.gain.value = 2; // Vibrato depth (2 Hz range around the base frequency)
-
-    // Connect the LFO to the gain node
-    vibratoOscillator.connect(vibratoGain);
-
-    // Connect the gain node to the oscillator's frequency
-    vibratoGain.connect(oscillator.frequency);
-
-    // Start the vibrato
-    vibratoOscillator.start();
-
-    // Optional: Store the LFO oscillator so you can stop or modify it later
-    activeOscillators[positionInArray].vibratoOscillator = vibratoOscillator;
-    console.log("Vibrato added to oscillator at position", positionInArray);
-}
-
-// Function to set volume
-function setVolume(volume) {
-    // Ensure the volume is within the range of 1 to 100
-    if (volume < 1 || volume > 100) {
-        console.error('Volume must be between 1 and 100');
+    // Check if oscillator exists
+    if (!oscillator) {
+        console.log("No oscillator found at position", positionInArray);
         return;
     }
 
-    // Convert the volume from 1-100 to 0-1
-    gainNode.gain.value = volume / 100;
-}
+    // Stop any existing vibratoOscillator
+    if (activeOscillators[positionInArray].vibratoOscillator) {
+        activeOscillators[positionInArray].vibratoOscillator.stop();
+        console.log("Stopped previous vibrato on oscillator at position", positionInArray);
+    }
 
-function addVibrato(positionInArray) {
-    // Retrieve the oscillator and the necessary data from the array
-    const oscillator = activeOscillators[positionInArray].oscillator;
+    // Retrieve vibrato frequency and depth values from input elements
+    const vibratoFrequency = parseFloat(document.getElementById('vibratoFrequency').value);
+    const vibratoDepth = parseFloat(document.getElementById('vibratoGain').value);
+    console.log("Vibrato frequency:", vibratoFrequency, "vibrato depth:", vibratoDepth);
 
     // Create an LFO (low-frequency oscillator) for vibrato
-    const vibratoOscillator = audioContext.createOscillator(); // LFO oscillator
-    vibratoOscillator.frequency.value = 5; // Set vibrato frequency (5 Hz is common for vibrato)
+    const vibratoOscillator = audioContext.createOscillator();
+    vibratoOscillator.frequency.value = vibratoFrequency;
 
     // Create a gain node to control the vibrato depth
     const vibratoGain = audioContext.createGain();
-    vibratoGain.gain.value = 2; // Vibrato depth (2 Hz range around the base frequency)
+    vibratoGain.gain.value = vibratoDepth;
 
     // Connect the LFO to the gain node
     vibratoOscillator.connect(vibratoGain);
@@ -123,11 +104,12 @@ function addVibrato(positionInArray) {
     // Connect the gain node to the oscillator's frequency
     vibratoGain.connect(oscillator.frequency);
 
-    // Start the vibrato
+    // Start the vibrato oscillator
     vibratoOscillator.start();
 
-    // Optional: Store the LFO oscillator so you can stop or modify it later
+    // Store the new LFO oscillator so you can stop or modify it later
     activeOscillators[positionInArray].vibratoOscillator = vibratoOscillator;
+
     console.log("Vibrato added to oscillator at position", positionInArray);
 }
 
@@ -150,15 +132,18 @@ function updateOscillatorQueue() {
     const textArea = document.getElementById('oscillatorQueue');
     const currentTime = audioContext.currentTime;
 
+    // Sort activeOscillators based on the remaining time
     activeOscillators.sort((a, b) => {
         const remainingTimeA = (a.startTime + a.holdTime / 1000) - currentTime;
-        const remainingTimeB = (b.startTime + b.holdTime / 1000) - currentTime;
+        const remainingTimeB = (b.startTime + a.holdTime / 1000) - currentTime;
         return remainingTimeA - remainingTimeB;
     });
 
+    // Map each oscillator to a string and display "playing with vibrato" if vibrato is active
     textArea.value = activeOscillators.map((osc, index) => {
         const remainingTime = ((osc.startTime + osc.holdTime / 1000) - currentTime).toFixed(2);
-        return `${index + 1}: Frequency: ${osc.frequency} Hz, Remaining Time: ${remainingTime} s`;
+        const vibratoStatus = osc.vibratoOscillator ? " (playing with vibrato)" : "";
+        return `${index + 1}: Frequency: ${osc.frequency} Hz, Remaining Time: ${remainingTime} s${vibratoStatus}`;
     }).join('\n');
 }
 
@@ -191,11 +176,59 @@ document.addEventListener("DOMContentLoaded", () => {
     volumeSlider.addEventListener('input', function () {
         setVolume(this.value);
     })
-    // Add event listener to the vibrato button
+    // Add event listener to the vibrato button and sliders
     document.getElementById('addVibrato').addEventListener('click', function () {
-        addVibrato(document.getElementById('oscillatorIndex').value);
-    })
-})
+        const positionInArrayElement = document.getElementById('oscillatorIndex');
+        let positionInArray = parseInt(positionInArrayElement.value); // Keep position as integer
+        //Array stars in 0
+        positionInArray = positionInArray - 1;
+
+        // Check if the input position is a valid number and if it refers to a valid oscillator in the array
+        if (isNaN(positionInArray) || positionInArray < 0 || positionInArray >= activeOscillators.length) {
+            console.log("Invalid position in array or no oscillator found at this position.");
+            return; // Exit if the position is invalid
+        }
+
+        // Apply vibrato to the selected oscillator
+        addVibrato(positionInArray);
+    });
+
+
+
+    // Listener for vibrato frequency input
+    document.getElementById('vibratoFrequency').addEventListener('input', function () {
+        const positionInArrayElement = document.getElementById('oscillatorIndex');
+        let positionInArray = parseInt(positionInArrayElement.value); // Ensure it's an integer
+        //Array stars in 0
+        positionInArray = positionInArray - 1;
+
+        // Apply vibrato if position is valid
+        if (!isNaN(positionInArray) && positionInArray >= 0 && positionInArray < activeOscillators.length) {
+            console.log("Applying vibrato to oscillator at position:", positionInArray);
+            addVibrato(positionInArray);
+        } else {
+            console.log("Invalid positionInArray when trying to apply vibrato.");
+        }
+    });
+
+    // Listener for vibrato gain (depth) input
+    document.getElementById('vibratoGain').addEventListener('input', function () {
+        const positionInArrayElement = document.getElementById('oscillatorIndex');
+        let positionInArray = parseInt(positionInArrayElement.value); // Ensure it's an integer
+
+        //Array stars in 0
+        positionInArray = positionInArray - 1;
+
+        // Apply vibrato if position is valid
+        if (!isNaN(positionInArray) && positionInArray >= 0 && positionInArray < activeOscillators.length) {
+            console.log("Applying vibrato to oscillator at position:", positionInArray);
+            addVibrato(positionInArray);
+        } else {
+            console.log("Invalid positionInArray when trying to apply vibrato.");
+        }
+    });
+});
+
 
 const freqs = [174.6, 220.0, 329.6]
 let arpeggiatorInterval
@@ -268,26 +301,26 @@ function addOvertone() {
     addOvertoneCounter += 1;
 }
 
-function drawWaveform(){
+function drawWaveform() {
     const canvas = document.getElementById('oscilloscope');
-    const canvasCtx = canvas.getContext ('2d'); 
+    const canvasCtx = canvas.getContext('2d');
 
-    function draw (){
-        requestAnimationFrame(draw); 
-        analyser.getByteTimeDomainData(dataArray); 
+    function draw() {
+        requestAnimationFrame(draw);
+        analyser.getByteTimeDomainData(dataArray);
 
         canvasCtx.fillStyle = 'rgb(200, 200, 200)';
-        canvasCtx.fillRect(0,0,canvas.clientWidth, canvas.height);
+        canvasCtx.fillRect(0, 0, canvas.clientWidth, canvas.height);
 
-        canvasCtx.lineWidth = 2; 
-        canvasCtx.strokeStyle = 'rgb(0,0,0)'; 
-        canvasCtx.beginPath(); 
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = 'rgb(0,0,0)';
+        canvasCtx.beginPath();
 
-        const sliceWidth = canvas.width * 1.0 / bufferLength; 
-        let x = 0; 
-        for ( let i = 0; i < bufferLength ; i++){
-            const v = dataArray[i] / 128.0; 
-            const y = v* canvas.height / 2; 
+        const sliceWidth = canvas.width * 1.0 / bufferLength;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0;
+            const y = v * canvas.height / 2;
 
             if (i == 0) {
                 canvasCtx.moveTo(x, y); // Corrected here
@@ -295,11 +328,11 @@ function drawWaveform(){
                 canvasCtx.lineTo(x, y);
             }
 
-            x += sliceWidth; 
+            x += sliceWidth;
         }
-        canvasCtx.lineTo(canvas.width, canvas.height/2); 
-        canvasCtx.stroke(); 
+        canvasCtx.lineTo(canvas.width, canvas.height / 2);
+        canvasCtx.stroke();
 
     }
-    draw(); 
+    draw();
 }
