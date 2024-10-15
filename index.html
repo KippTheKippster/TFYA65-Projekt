@@ -69,8 +69,17 @@
 
         <!-- Slider for volume -->
         <label for="volumeSlider">Volume:</label>
+        
         <input type="range" id="volumeSlider" name="volumeSlider" min="1" max="100" value="50">
-
+        <div>
+            <label for="waveFormType">Wave form type:</label>
+            <select id="waveFormType">
+                <option value="sine">Sine</option>
+                <option value="square">Square</option>
+                <option value="sawtooth">Sawtooth</option>
+                <option value="triangle">Triangle</option>
+            </select>
+        </div>
         <div id="arpeggiatorControlls">
             <label for="arpeggiatorPlaymode">Play Mode:</label>
             <select id="arpeggiatorPlaymode">

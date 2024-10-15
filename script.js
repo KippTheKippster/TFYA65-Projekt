@@ -161,7 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('startButton').addEventListener('click', function () {
         playSound(
             document.getElementById('frequency').value,
-            document.getElementById('holdTime').value
+            document.getElementById('holdTime').value,
+            currentWaveType
         )
     })
     document.getElementById('addHarmonic').addEventListener('click', function () {
@@ -237,6 +238,11 @@ document.addEventListener("DOMContentLoaded", () => {
         playMode = document.getElementById('arpeggiatorPlaymode').value
         updatePlayModeFreqs()
         //startArpeggiator()
+    })
+
+    document.getElementById('waveFormType').addEventListener('click', function()
+    {
+        currentWaveType = document.getElementById('waveFormType').value
     })
     document.getElementById('tempoRange').addEventListener('input', function()
     {
@@ -352,6 +358,8 @@ function drawWaveform() {
     draw();
 }
 
+let currentWaveType = "sine"
+
 let playModeIndex = 0
 const playModes = ["up", "down", "updown"]
 let inputFreqs = []
@@ -393,7 +401,7 @@ function playNextNote()
     //console.log(index, " : ", freqs[index])
     if (inputFreqs.length > 0)
     {
-        playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, "sawtooth")
+        playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType)
     }
     
     prevNoteIndex = index
