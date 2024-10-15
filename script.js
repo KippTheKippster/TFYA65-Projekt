@@ -230,9 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('arpeggiatorPlaymode').addEventListener('click', function()
     {
         //stopArpeggiator()
-        playModeIndex += 1
-        playModeIndex = playModeIndex % playModes.length
-        playMode = playModes[playModeIndex]
+        console.log(document.getElementById('arpeggiatorPlaymode').value)
+        //playModeIndex += 1
+        //playModeIndex = playModeIndex % playModes.length
+        //playMode = playModes[playModeIndex]
+        playMode = document.getElementById('arpeggiatorPlaymode').value
         updatePlayModeFreqs()
         //startArpeggiator()
     })
@@ -356,10 +358,10 @@ let inputFreqs = []
 let freqs = inputFreqs
 let arpeggiatorTimeout
 let noteIndex = 0
-let tempo = 150
+let tempo = 275
 let playMode = "up"
 let prevNoteIndex = 0
-let octaveTarget = 2
+let octaveTarget = 1
 let currentOctave = 0
 let gateScale = 0.5
 
@@ -459,6 +461,19 @@ function keyNote(event) {
         }
         inputFreqs = inputFreqs.sort(function(a,b) { return a - b;});
         updatePlayModeFreqs()
+        var text = "Keys: "
+        inputFreqs.forEach(element => {
+            for (let i = 1; i < 10; i++)
+            {
+                let index = noteFreqs.indexOf(element / Math.pow(2, i))
+                if (index != -1)
+                {
+                    text += noteNames[index] + i + " "
+                    break
+                }
+            }
+        }); 
+        document.getElementById("keysPlaying").textContent = text
         //event.preventDefault();
     }
 }
