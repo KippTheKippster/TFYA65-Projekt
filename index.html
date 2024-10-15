@@ -70,11 +70,16 @@
         <!-- Slider for volume -->
         <label for="volumeSlider">Volume:</label>
         <input type="range" id="volumeSlider" name="volumeSlider" min="1" max="100" value="50">
-        
+
         <div id="arpeggiatorControlls">
             <button id="arpeggiatorPlaymode">Next Play Mode</button>
-            <input type="range" min="75" max="400" value="200" class="slider" id="tempoRange">
-            <input type="range" min="1" max="200" value="50" class="slider" id="gateRange">
+            <label for="tempoRange">Tempo:</label>
+            <input id="tempoRange" type="range" min="75" max="400" value="200" class="slider" >
+            <label for="gateRange">Gate:</label>
+            <input id="gateRange" type="range" min="1" max="200" value="50" class="slider">
+            <label for="octaveRange">Octave:</label>
+            <input id="octaveRange" type="number" name="octaveRange" value="1">
+            
         </div>
 
     </div>

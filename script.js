@@ -19,11 +19,11 @@ const dataArray = new Uint8Array(bufferLength);
 
 
 // Function to play a sound
-function playSound(frequency = 440.0, holdTime = 1000.0) {
-    console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
+function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine') {
+    //console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
     // Create an OscillatorNode
     const oscillator = audioContext.createOscillator();
-    oscillator.type = 'sine'; // Type of wave: sine, square, sawtooth, triangle
+    oscillator.type = type; // Type of wave: sine, square, sawtooth, triangle
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
 
     const bufferLength = analyser.frequencyBinCount;
@@ -128,7 +128,7 @@ function stopAllSounds() {
 setInterval(updateOscillatorQueue, 500);
 
 function updateOscillatorQueue() {
-    console.log("Updating queue..."); // Debugging line to check if the function is being called.
+    //console.log("Updating queue..."); // Debugging line to check if the function is being called.
     const textArea = document.getElementById('oscillatorQueue');
     const currentTime = audioContext.currentTime;
 
@@ -229,34 +229,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('arpeggiatorPlaymode').addEventListener('click', function()
     {
-        clearInterval(arpeggiatorInterval)
+        //stopArpeggiator()
         playModeIndex += 1
         playModeIndex = playModeIndex % playModes.length
         playMode = playModes[playModeIndex]
-        if (playMode == "up")
-        {
-            freqs = inputFreqs
-        }
-        else if (playMode == "down")
-        {
-            freqs = Array.from(inputFreqs).reverse()
-        }
-        else if (playMode == "updown")
-        {
-            freqs = inputFreqs.concat(Array.from(inputFreqs).reverse())
-            console.log(freqs)
-        }
-        startArpeggiator()
+        updatePlayModeFreqs()
+        //startArpeggiator()
     })
     document.getElementById('tempoRange').addEventListener('input', function()
     {
-        tempo = document.getElementById('tempoRange').value
+        tempo = 400 - document.getElementById('tempoRange').value + 75
     })
     document.getElementById('gateRange').addEventListener('input', function()
     {
-        //clearInterval(arpeggiatorInterval)
         gateScale = document.getElementById('gateRange').value / 100.0
-        //startArpeggiator()
+    })
+    document.getElementById('octaveRange').addEventListener('input', function()
+    {
+        var value = Math.max(document.getElementById('octaveRange').value, 1)
+        document.getElementById('octaveRange').value = value
+        octaveTarget = value
     })
 
     startArpeggiator()
@@ -359,8 +351,8 @@ function drawWaveform() {
 }
 
 let playModeIndex = 0
-const playModes = ["up", "down", "updown", "random"]
-const inputFreqs = [174, 220, 330]
+const playModes = ["up", "down", "updown"]
+let inputFreqs = []
 let freqs = inputFreqs
 let arpeggiatorTimeout
 let noteIndex = 0
@@ -376,62 +368,18 @@ function startArpeggiator()
     arpeggiatorTimeout = setTimeout(playNextNote, tempo)
 }
 
-function getArrayNoteIndex(mode)
+function stopArpeggiator() 
 {
-    let arrayNoteIndex = 0
-
-    if (mode == "up")
+    if (arpeggiatorTimeout != null)
     {
-        arrayNoteIndex = noteIndex % freqs.length
+        clearInterval(arpeggiatorTimeout)
+        arpeggiatorTimeout = null
     }
-    else if (mode == "down")
-    {
-        let i = noteIndex % freqs.length
-        arrayNoteIndex = freqs.length - i - 1
-    }
-    else if (mode == "updown")
-    {
-        let i = Math.floor(noteIndex / freqs.length) % 2
-        if (i == 0)
-        {
-            arrayNoteIndex = getArrayNoteIndex("up")
-        }
-        else
-        {
-            arrayNoteIndex = getArrayNoteIndex("down")
-        }
-    }
-    else if (mode == "random")
-    {
-        arrayNoteIndex = Math.floor((Math.random() * freqs.length) - 0.001)
-        if (freqs.length > 1)
-        {
-            if (prevNoteIndex == arrayNoteIndex)
-            {
-                arrayNoteIndex = getArrayNoteIndex("random")
-            }
-        }
-    }
-    else if (mode == "updownskip")
-    {
-        let i = Math.floor(noteIndex / freqs.length) % 2
-        if (i == 0)
-        {
-            arrayNoteIndex = getArrayNoteIndex("up")
-        }
-        else
-        {
-            arrayNoteIndex = getArrayNoteIndex("down")
-        }
-    }
-    
-
-    return arrayNoteIndex
 }
+
 
 function playNextNote()
 {
-    //let index = getArrayNoteIndex(playMode)
     let index = noteIndex % freqs.length
     if (index >= freqs.length - 1)
     {
@@ -441,8 +389,126 @@ function playNextNote()
     //currentOctave = Math.floor(noteIndex / freqs.length) % octaveTarget
     //currentOctave = 0
     //console.log(index, " : ", freqs[index])
-    playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, "square")
+    if (inputFreqs.length > 0)
+    {
+        playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, "sawtooth")
+    }
+    
     prevNoteIndex = index
     noteIndex += 1
     arpeggiatorTimeout = setTimeout(playNextNote, tempo)
+}
+
+//const synthKeys = document.querySelectorAll(".key"); // Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Simple_synth
+const keyCodes = [
+    "KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Comma", "Period", "Slash", "ShiftRight",
+  "KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "Enter",
+  "Tab", "KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP", "BracketLeft", "BracketRight",
+  "Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0", "Minus", "Equal", "Backspace",
+  "Escape",
+];
+
+
+const noteFreqs = [
+    16.352 ,	
+    17.324,
+    18.354,
+    19.445,
+    20.602,
+    21.827,
+    23.125,
+    24.500,
+    25.957, 
+    27.500,
+    29.135,
+    30.868
+]
+
+const noteNames = [
+    'C', 	
+    'C#', 
+    'D', 
+    'D#', 
+    'E', 
+    'F', 
+    'F#', 
+    'G' ,
+    'G#' ,
+    'A',
+    'A#', 	
+    'B',
+]
+
+
+function keyNote(event) {
+    let keyIndex = keyCodes.indexOf(event.code)
+    let noteIndex = keyIndex % 12
+    let octave = Math.floor(keyIndex / 12.0) + 1
+    let freq = noteFreqs[noteIndex] * Math.pow(2, octave)
+    console.log(noteNames[noteIndex] + octave)
+    if (!isNaN(freq)) {
+        if (event.type === "keydown") {
+            if (inputFreqs.indexOf(freq) == -1)
+            {
+                inputFreqs.push(freq)
+            }
+        } else {
+            inputFreqs = inputFreqs.filter(function(currentFreq) {
+                return currentFreq != freq;
+            });
+        }
+        inputFreqs = inputFreqs.sort(function(a,b) { return a - b;});
+        updatePlayModeFreqs()
+        //event.preventDefault();
+    }
+}
+
+addEventListener("keydown", keyNote);
+addEventListener("keyup", keyNote);
+
+
+function notePressed(event) 
+{
+    if (event.buttons & 1) {
+        const dataset = event.target.dataset;
+
+        if (!dataset["pressed"] && dataset["octave"]) {
+        const octave = Number(dataset["octave"]);
+        oscList[octave][dataset["note"]] = playTone(dataset["frequency"]);
+        dataset["pressed"] = "yes";
+        }
+    }
+}
+
+function noteReleased(event) 
+{
+    const dataset = event.target.dataset;
+
+    if (dataset && dataset["pressed"]) {
+        const octave = Number(dataset["octave"]);
+
+        if (oscList[octave] && oscList[octave][dataset["note"]]) {
+        oscList[octave][dataset["note"]].stop();
+        delete oscList[octave][dataset["note"]];
+        delete dataset["pressed"];
+        }
+    }
+}
+
+
+function updatePlayModeFreqs()
+{
+    if (playMode == "up")
+    {
+        freqs = inputFreqs
+    }
+    else if (playMode == "down")
+    {
+        freqs = Array.from(inputFreqs).reverse()
+    }
+    else if (playMode == "updown")
+    {
+        freqs = inputFreqs.concat(Array.from(inputFreqs).reverse())
+    }
+    
 }
