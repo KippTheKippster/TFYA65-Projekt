@@ -164,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('holdTime').value
         )
     })
-    //startArpeggiator()
     document.getElementById('addHarmonic').addEventListener('click', function () {
         addOvertone();
     })
@@ -227,20 +226,42 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Invalid positionInArray when trying to apply vibrato.");
         }
     });
+
+    document.getElementById('arpeggiatorPlaymode').addEventListener('click', function()
+    {
+        clearInterval(arpeggiatorInterval)
+        playModeIndex += 1
+        playModeIndex = playModeIndex % playModes.length
+        playMode = playModes[playModeIndex]
+        if (playMode == "up")
+        {
+            freqs = inputFreqs
+        }
+        else if (playMode == "down")
+        {
+            freqs = Array.from(inputFreqs).reverse()
+        }
+        else if (playMode == "updown")
+        {
+            freqs = inputFreqs.concat(Array.from(inputFreqs).reverse())
+            console.log(freqs)
+        }
+        startArpeggiator()
+    })
+    document.getElementById('tempoRange').addEventListener('input', function()
+    {
+        tempo = document.getElementById('tempoRange').value
+    })
+    document.getElementById('gateRange').addEventListener('input', function()
+    {
+        //clearInterval(arpeggiatorInterval)
+        gateScale = document.getElementById('gateRange').value / 100.0
+        //startArpeggiator()
+    })
+
+    startArpeggiator()
 });
 
-
-const freqs = [174.6, 220.0, 329.6]
-let arpeggiatorInterval
-let noteIndex = 0
-
-function startArpeggiator() {
-    arpeggiatorInterval = setInterval(playNextNote)
-}
-
-function playNextNote() {
-
-}
 
 function checkUniqueActiveOscillators() {
     // make a set (all elements of the set are unique)
@@ -335,4 +356,93 @@ function drawWaveform() {
 
     }
     draw();
+}
+
+let playModeIndex = 0
+const playModes = ["up", "down", "updown", "random"]
+const inputFreqs = [174, 220, 330]
+let freqs = inputFreqs
+let arpeggiatorTimeout
+let noteIndex = 0
+let tempo = 150
+let playMode = "up"
+let prevNoteIndex = 0
+let octaveTarget = 2
+let currentOctave = 0
+let gateScale = 0.5
+
+function startArpeggiator()
+{
+    arpeggiatorTimeout = setTimeout(playNextNote, tempo)
+}
+
+function getArrayNoteIndex(mode)
+{
+    let arrayNoteIndex = 0
+
+    if (mode == "up")
+    {
+        arrayNoteIndex = noteIndex % freqs.length
+    }
+    else if (mode == "down")
+    {
+        let i = noteIndex % freqs.length
+        arrayNoteIndex = freqs.length - i - 1
+    }
+    else if (mode == "updown")
+    {
+        let i = Math.floor(noteIndex / freqs.length) % 2
+        if (i == 0)
+        {
+            arrayNoteIndex = getArrayNoteIndex("up")
+        }
+        else
+        {
+            arrayNoteIndex = getArrayNoteIndex("down")
+        }
+    }
+    else if (mode == "random")
+    {
+        arrayNoteIndex = Math.floor((Math.random() * freqs.length) - 0.001)
+        if (freqs.length > 1)
+        {
+            if (prevNoteIndex == arrayNoteIndex)
+            {
+                arrayNoteIndex = getArrayNoteIndex("random")
+            }
+        }
+    }
+    else if (mode == "updownskip")
+    {
+        let i = Math.floor(noteIndex / freqs.length) % 2
+        if (i == 0)
+        {
+            arrayNoteIndex = getArrayNoteIndex("up")
+        }
+        else
+        {
+            arrayNoteIndex = getArrayNoteIndex("down")
+        }
+    }
+    
+
+    return arrayNoteIndex
+}
+
+function playNextNote()
+{
+    //let index = getArrayNoteIndex(playMode)
+    let index = noteIndex % freqs.length
+    if (index >= freqs.length - 1)
+    {
+        currentOctave += 1
+        currentOctave = currentOctave % octaveTarget
+    }
+    //currentOctave = Math.floor(noteIndex / freqs.length) % octaveTarget
+    //currentOctave = 0
+    //console.log(index, " : ", freqs[index])
+    playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, "square")
+    prevNoteIndex = index
+    noteIndex += 1
+    arpeggiatorTimeout = setTimeout(playNextNote, tempo)
 }
