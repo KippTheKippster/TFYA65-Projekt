@@ -19,26 +19,35 @@ const dataArray = new Uint8Array(bufferLength);
 
 
 // Function to play a sound
-function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine') {
+function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune = 0.0, gain = 1.0) {
     //console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
     // Create an OscillatorNode
-    const oscillator = audioContext.createOscillator();
-    oscillator.type = type; // Type of wave: sine, square, sawtooth, triangle
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
-
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    // Connect the oscillator to the analyser and then to the destination
-    oscillator.connect(analyser);
-    analyser.connect(audioContext.destination);
-    oscillator.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
+    const oscillator = createOscillator(frequency, holdTime, type, detune)
+    
+    connectNodeToMain(oscillator, gain)
     // Connect the oscillator to the destination (speakers)
     //oscillator.connect(audioContext.destination);
 
     // Start the oscillator
     oscillator.start();
 
+    addOscillatorToQueue(oscillator, frequency, holdTime)
+}
+
+
+function createOscillator(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune = 0.0)
+{
+    const oscillator = audioContext.createOscillator();
+    oscillator.type = type; // Type of wave: sine, square, sawtooth, triangle
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
+    oscillator.detune.value = detune
+    return oscillator
+}
+
+
+
+function addOscillatorToQueue(oscillator, frequency, holdTime)
+{
     // Add the oscillator to the list of active oscillators with its start time and hold time
     const startTime = audioContext.currentTime;
     activeOscillators.push({ oscillator, frequency, startTime, holdTime });
@@ -54,6 +63,80 @@ function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine') {
     // Update the oscillator queue display
     updateOscillatorQueue();
     drawWaveform();
+}
+
+
+function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', width = 10.0) {
+
+    const a = createOscillator(frequency, holdTime, type, 0)
+    const b = createOscillator(frequency, holdTime, type, width)
+    const c = createOscillator(frequency, holdTime, type, -width)
+
+    const gain = audioContext.createGain()
+    const maxGain = 0.33
+    gain.gain.value = maxGain
+    a.connect(gain)
+    b.connect(gain)
+    c.connect(gain)
+
+    const stage_max_time = 2
+
+    const currentTime = audioContext.currentTime
+    const attackDuration = document.getElementById("attackRange").value / 100 * holdTime / 1000
+    const attackEndTime = currentTime + attackDuration
+    const decayDuration = document.getElementById("decayRange").value / 100 * holdTime / 1000
+    const totalDuration = attackDuration + decayDuration
+
+    gain.gain.setValueAtTime(0, currentTime)
+    gain.gain.linearRampToValueAtTime(maxGain, attackEndTime)
+    gain.gain.setTargetAtTime(maxGain * document.getElementById("sustainRange").value / 100, attackEndTime, decayDuration)
+
+    connectNodeToMain(gain) 
+
+    a.start()
+    b.start()
+    c.start()
+
+    addOscillatorToQueue(a, frequency, totalDuration * 1000)
+    addOscillatorToQueue(b, frequency, totalDuration * 1000)
+    addOscillatorToQueue(c, frequency, totalDuration * 1000)
+
+}
+
+
+function connectNodeToMain(node, gain = 1.0)
+{
+    const localGain = audioContext.createGain()
+    localGain.gain.value = gain
+
+    node.connect(localGain)
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    // Connect the oscillator to the analyser and then to the destination
+    const delay = audioContext.createDelay()
+    delay.delayTime.value = gateScale * tempo / 1000;
+
+    const feedback = audioContext.createGain();
+    feedback.gain.value = document.getElementById("feedbackRange").value / 100;
+    //filter.type = 'lowpass'
+    //filter.frequency.setTargetAtTime(2000, audioContext.currentTime, 0)
+    const filter = audioContext.createBiquadFilter()
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(10000000, audioContext.currentTime);
+    localGain.connect(filter)
+
+    
+    filter.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
+    filter.connect(delay); // Connect oscillator to the GainNode (volume slider)
+    delay.connect(feedback)
+    feedback.connect(delay)
+    feedback.connect(gainNode)
+    gainNode.connect(analyser);
+    // Connect the oscillator to the destination (speakers)
+    //oscillator.connect(audioContext.destination);
+
 }
 
 // Function to set volume
@@ -230,14 +313,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('arpeggiatorPlaymode').addEventListener('click', function()
     {
-        //stopArpeggiator()
-        console.log(document.getElementById('arpeggiatorPlaymode').value)
-        //playModeIndex += 1
-        //playModeIndex = playModeIndex % playModes.length
-        //playMode = playModes[playModeIndex]
         playMode = document.getElementById('arpeggiatorPlaymode').value
         updatePlayModeFreqs()
-        //startArpeggiator()
+    })
+
+    document.getElementById("unisonWidthRange").addEventListener('input', function()
+    {
+        unisonWidth = document.getElementById('unisonWidthRange').value
     })
 
     document.getElementById('waveFormType').addEventListener('click', function()
@@ -359,7 +441,7 @@ function drawWaveform() {
 }
 
 let currentWaveType = "sine"
-
+let unisonWidth = 0
 let playModeIndex = 0
 const playModes = ["up", "down", "updown"]
 let inputFreqs = []
@@ -401,7 +483,18 @@ function playNextNote()
     //console.log(index, " : ", freqs[index])
     if (inputFreqs.length > 0)
     {
-        playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType)
+        if (playMode == 'random')
+        {
+            index = Math.floor(Math.random() * (freqs.length))
+        }
+        if (unisonWidth == 0)
+        {
+            playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType)
+        }
+        else
+        {
+            playCustomSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType, unisonWidth)
+        }
     }
     
     prevNoteIndex = index
@@ -467,7 +560,7 @@ function keyNote(event) {
                 return currentFreq != freq;
             });
         }
-        inputFreqs = inputFreqs.sort(function(a,b) { return a - b;});
+        //inputFreqs = inputFreqs.sort(function(a,b) { return a - b;});
         updatePlayModeFreqs()
         var text = "Keys: "
         inputFreqs.forEach(element => {
@@ -532,6 +625,10 @@ function updatePlayModeFreqs()
     else if (playMode == "updown")
     {
         freqs = inputFreqs.concat(Array.from(inputFreqs).reverse())
+    }
+    else
+    {
+        freqs = inputFreqs
     }
     
 }
