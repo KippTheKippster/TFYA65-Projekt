@@ -8,6 +8,7 @@ body {
   padding-top: 90px;
   padding-right: 3%;
   padding-left: 3%;
+  font-size: 18px;
 
 }
 
@@ -80,20 +81,24 @@ height: fit-content;
 }
 
 footer {
-  border-radius: 15px;
-  height: 4.5%;
+ 
   background-color:#7c7b7b83;
   color: black;
   text-align: center;
   /* position: fixed; */
-  bottom: 0;
-  justify-content: center;
   left: 1%;
   right: 1%;
   width: 98%;
   padding-top: 20px 0;
+  border-radius: 15px;
+  height: 4.5%;
   }
   
+  #txt{
+    font-size: 14px;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
+  
+   }
 .container , .contanier-vis{
   display: flex;
   justify-content: space-between;
@@ -189,10 +194,4 @@ input[type="range"] {
   max-width: auto;
  }
 
- #txt{
-  font-size: 12px;
-  width: auto;
-  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
-  padding: 10;
-
- }
+ 
