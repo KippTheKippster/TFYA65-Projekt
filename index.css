@@ -1,11 +1,14 @@
 body {
   background-color: #d3e0ed;
-  font-family: Arial, sans-serif;
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
   position: relative;
   margin:  0;
   height: 100% ;
   padding: 10;
-  padding-top: 90px
+  padding-top: 90px;
+  padding-right: 3%;
+  padding-left: 3%;
+
 }
 
 
@@ -31,6 +34,20 @@ body {
 
 }
 
+#startButton, #addHarmonic, #addUndertone, #addVibrato , #stopButton{
+  background-color: #f0f0f0; /* Light background */
+  border: 1px solid #d0d0d0; /* Subtle border */
+  color: black; /* Text color */
+  padding: 8px 15px; /* Padding around the text */
+  border-radius: 8px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-size: 12px; /* Font size */
+  display: inline-flex; /* Aligns icon and text nicely */
+  align-items: center; /* Center icon and text vertically */
+  gap: 5px; /* Space between icon and text */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
 #frequency, #oscillatorIndex{
   width: 40px;
   padding: 5px; 
@@ -48,7 +65,7 @@ body {
 }
 
 #oscillatorQueue {
-  width: 50%;
+  width: auto;
   padding: 5px; 
   font-size: 14px;
 }
@@ -63,19 +80,20 @@ height: fit-content;
 }
 
 footer {
-border-radius: 15px;
-height: 4.5%;
-background-color:#7c7b7b83;
-color: black;
-text-align: center;
-position: fixed;
-bottom: 0;
-justify-content: center;
-left: 1%;
- right: 1%;
-width: 98%;
-}
-
+  border-radius: 15px;
+  height: 4.5%;
+  background-color:#7c7b7b83;
+  color: black;
+  text-align: center;
+  /* position: fixed; */
+  bottom: 0;
+  justify-content: center;
+  left: 1%;
+  right: 1%;
+  width: 98%;
+  padding-top: 20px 0;
+  }
+  
 #popup {
   display: none;
   position: fixed;
@@ -98,6 +116,88 @@ width: 98%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
 }
-.button:hover {
-  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+
+.container , .contanier-vis{
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  gap: 10px; /* Adds space between the sections */
 }
+
+.left-column, .second-column, .third-column, .right-column {
+  width: 24%; /* Make each column take up 24% of the available width */
+  min-width: 200px; /* Set a minimum width to avoid overlap */
+}
+
+.buttons{
+  background-color: #4CAF50;
+  border: none;
+  color: rgb(9, 62, 74);
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+
+#oscilloscope, #fftCanvas{
+  font-family: 'Courier New', Courier, monospace;
+  border: 2px solid #7c7b7b83;
+  border-radius: 8px; /* Rounded corners */
+  display: block; /* Ensures the canvas takes up the full wrapper space */
+}
+
+.control-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px; /* Reduce padding to make sections more compact */
+  max-height: fit-content;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.control-group label {
+  width: 25%;
+  font-size:14px;
+  font-weight: bold;
+}
+
+.control-group input, .control-group select {
+    flex: 1;
+    width: 10; /* Adjust width as needed */
+    padding: 5px; /* Adjust padding to make them smaller */
+
+}
+
+input[type="range"] {
+  width: 100px; /* Reduce width of sliders */
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+      flex-direction: column;
+  }
+}
+
+#frequency, #holdTime, #oscillatorIndex , #waveFormType, #arpeggiatorPlaymode, #octaveRange {
+ max-width: auto;
+}
+ #gateRange , #tempoRange, #feedbackRange, #volumeSlider, #vibratoGain, #vibratoFrequency, #unisonWidthRange , #attackRange, #decayRange, #sustainRange, #releaseRange{
+  max-width: auto;
+ }
+
+ #txt{
+  font-size: 12px;
+  width: auto;
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
+ }

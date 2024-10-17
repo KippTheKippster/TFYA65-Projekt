@@ -16,7 +16,10 @@ analyser.fftSize = 1024;
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 
-
+const audioSource = audioContext.createOscillator(); // Define your audio source
+audioSource.connect(analyser); // Then connect it to the analyser
+analyser.connect(audioContext.destination);
+gainNode.connect(analyser);
 
 // Function to play a sound
 function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune = 0.0, gain = 1.0) {
@@ -63,7 +66,36 @@ function addOscillatorToQueue(oscillator, frequency, holdTime)
     // Update the oscillator queue display
     updateOscillatorQueue();
     drawWaveform();
+    drawFrequency(); 
 }
+
+function drawFrequency() {
+    const canvas = document.getElementById('fftCanvas');
+    const ctx = canvas.getContext('2d');
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+
+    requestAnimationFrame(drawFrequency);
+
+    analyser.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    const barWidth = (WIDTH / bufferLength) * 2.5;
+    let barHeight;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i] / 2;
+
+        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+        ctx.fillRect(x, HEIGHT - barHeight, barWidth, barHeight);
+
+        x += barWidth + 1;
+    }
+
+}
+
 
 
 function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', width = 10.0) {

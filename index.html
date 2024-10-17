@@ -13,7 +13,7 @@
 
     <!--css file-->
     <link rel="stylesheet" href="index.css">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 </head>
 
@@ -23,7 +23,9 @@
     <!-- Popup content -->
 
     <div id="popup">
-        <p>Welcome to our page! info is coming </p>
+        <p>This page was built as part of the Epic Arpeggiator project for the Physic of Sound -TFYA65 at Liu . The
+            project demonstrates key concepts audio visualization, user interaction, and real-time sound manipulation.
+        </p>
         <button id="popup_close" onclick="closePopup()">Close</button>
     </div>
 
@@ -44,84 +46,155 @@
 
 
     <div id="TopDiv">
-        <h1> Epic Arpeggiator</h1>
+        <h1>Epic Arpeggiator</h1>
     </div>
 
-    <div id="buttons">
-        <!-- Input fields for frequency and hold time -->
-        <label for="frequency">Frequency (Hz):</label>
-        <input type="number" id="frequency" name="frequency" value="440">
-        <label for="holdTime">Hold Time (ms):</label>
-        <input type="number" id="holdTime" name="holdTime" value="5000">
-        <label for="vibratoFrequency">Vibrato Frequency (speed, Hz):</label>
-        <input type="range" id="vibratoFrequency" name="vibratoFrequency" min="1" max="30" value="5">
-        <label for="vibratoGain">Vibrato Gain (Pitch Change Hz):</label>
-        <input type="range" id="vibratoGain" name="vibratoGain" min="1" max="100" value="2">
-        <label for="oscillatorIndex ">Add effect to:</label><!--add effect to which index in the oscillator array-->
-        <input type="number" id="oscillatorIndex" name="oscillatorIndex" value="1">
+    <p>Use the sliders and buttons above to adjust the frequency, volume, and effects. The waveform below will respond
+        in real-time!</p>
 
-        <!-- Button to play sound -->
-        <button id="startButton">Play Sound</button>
-        <button id="addHarmonic">Add Harmonics</button>
+    <!-- Flexbox container for all four columns -->
+    <div class="container">
+        <!-- Left Column -->
+        <div class="left-column">
+            <div class="control-section">
+                <div class="control-group">
+                    <label for="frequency">Frequency (Hz):</label>
+                    <input type="number" id="frequency" name="frequency" value="440">
+                </div>
+                <div class="control-group">
+                    <label for="holdTime">Hold Time (ms):</label>
+                    <input type="number" id="holdTime" name="holdTime" value="5000">
+                </div>
+                <div class="control-group">
+                    <label for="vibratoFrequency">Vibrato Frequency (speed, Hz):</label>
+                    <input type="range" id="vibratoFrequency" name="vibratoFrequency" min="1" max="30" value="5">
+                </div>
+                <div class="control-group">
+                    <label for="vibratoGain">Vibrato Gain (Pitch Change Hz):</label>
+                    <input type="range" id="vibratoGain" name="vibratoGain" min="1" max="100" value="2">
+                </div>
+                <div class="control-group">
+                    <label for="oscillatorIndex">Add effect to:</label>
+                    <input type="number" id="oscillatorIndex" name="oscillatorIndex" value="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Second Column -->
+        <div class="second-column">
+            <div class="control-section">
+                <div class="control-group">
+                    <label for="volumeSlider">Volume:</label>
+                    <input type="range" id="volumeSlider" name="volumeSlider" min="1" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <label for="waveFormType">Wave form type:</label>
+                    <select id="waveFormType">
+                        <option value="sine">Sine</option>
+                        <option value="square">Square</option>
+                        <option value="sawtooth">Sawtooth</option>
+                        <option value="triangle">Triangle</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="feedbackRange">Feedback:</label>
+                    <input id="feedbackRange" type="range" min="0" max="75" value="0" class="slider">
+                </div>
+            </div>
+        </div>
+
+        <!-- Third Column -->
+        <div class="third-column">
+            <div class="control-section">
+                <div class="control-group">
+                    <label for="arpeggiatorPlaymode">Play Mode:</label>
+                    <select id="arpeggiatorPlaymode">
+                        <option value="up">Up</option>
+                        <option value="down">Down</option>
+                        <option value="updown">Up-Down</option>
+                        <option value="random">Random</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="tempoRange">Tempo:</label>
+                    <input id="tempoRange" type="range" min="75" max="400" value="200" class="slider">
+                </div>
+                <div class="control-group">
+                    <label for="gateRange">Gate:</label>
+                    <input id="gateRange" type="range" min="1" max="200" value="50" class="slider">
+                </div>
+                <div class="control-group">
+                    <label for="octaveRange">Octave:</label>
+                    <input id="octaveRange" type="number" name="octaveRange" value="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <div class="control-section">
+                <div class="control-group">
+                    <label for="unisonWidthRange">Unison Width:</label>
+                    <input id="unisonWidthRange" type="range" min="0" max="30" value="0" class="slider">
+                </div>
+                <div class="control-group">
+                    <label for="attackRange">Attack:</label>
+                    <input id="attackRange" type="range" min="0" max="50" value="0" class="slider">
+                </div>
+                <div class="control-group">
+                    <label for="decayRange">Decay:</label>
+                    <input id="decayRange" type="range" min="0" max="50" value="0" class="slider">
+                </div>
+                <div class="control-group">
+                    <label for="sustainRange">Sustain:</label>
+                    <input id="sustainRange" type="range" min="0" max="100" value="60" class="slider">
+                </div>
+                <div class="control-group">
+                    <label for="releaseRange">Release:</label>
+                    <input id="releaseRange" type="range" min="0" max="30" value="0" class="slider">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Buttons -->
+    <div class="control-group" class="buttons">
+        <button id="startButton"><i class="fa fa-play"></i> Play Sound</button>
+        <button id="addHarmonic"> Add Harmonics</button>
         <button id="addUndertone">Add Undertones</button>
-        <button id="addVibrato">Add Vibrato</button>
-        <button id="stopButton">Stop All</button>
+        <button id="addVibrato"> Add Vibrato</button>
+        <button id="stopButton"><i class="fas fa-stop-circle"></i> Stop All</button>
 
-        <!-- Slider for volume -->
-        <label for="volumeSlider">Volume:</label>
-        
-        <input type="range" id="volumeSlider" name="volumeSlider" min="1" max="100" value="50">
-        <div>
-            <label for="waveFormType">Wave form type:</label>
-            <select id="waveFormType">
-                <option value="sine">Sine</option>
-                <option value="square">Square</option>
-                <option value="sawtooth">Sawtooth</option>
-                <option value="triangle">Triangle</option>
-            </select>
-            <label for="feedbackRange">Feedback:</label>
-            <input id="feedbackRange" type="range" min="0" max="75" value="0" class="slider" >
-        </div>
-        <div id="arpeggiatorControlls">
-            <label for="arpeggiatorPlaymode">Play Mode:</label>
-            <select id="arpeggiatorPlaymode">
-                <option value="up">Up</option>
-                <option value="down">Down</option>
-                <option value="updown">Up-Down</option>
-                <option value="random">Random</option>
-            </select>
-            <label for="tempoRange">Tempo:</label>
-            <input id="tempoRange" type="range" min="75" max="400" value="200" class="slider" >
-            <label for="gateRange">Gate:</label>
-            <input id="gateRange" type="range" min="1" max="200" value="50" class="slider">
-            <label for="octaveRange">Octave:</label>
-            <input id="octaveRange" type="number" name="octaveRange" value="1">
-        </div>
-        <div>
-            <label for="unisonWidthRange">Unison Width:</label>
-            <input id="unisonWidthRange" type="range" min="0" max="30" value="0" class="slider">
-            <label for="attackRange">Attack:</label>
-            <input id="attackRange" type="range" min="0" max="50" value="0" class="slider">
-            <label for="decayRange">Decay:</label>
-            <input id="decayRange" type="range" min="0" max="50" value="0" class="slider">
-            <label for="sustainRange">Sustain:</label>
-            <input id="sustainRange" type="range" min="0" max="100" value="60" class="slider">
-            <label for="releaseRange">Release:</label>
-            <input id="releaseRange" type="range" min="0" max="30" value="0" class="slider">
+    </div>
 
-        </div>
+    <div>
+
+        <!-- Text area to display active oscillators -->
+        <p> OBS! you can use your own keyborad as Musical keyboard</p>
         <p id="keysPlaying"></p>
 
+        <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
+       
+        <h2>Real-Time Oscilloscope</h2>
+
+        <div class="contanier-vis">
+            <div class="vis1">
+                <p>Visualize the audio signal with various effects applied.</p>
+                <canvas id="oscilloscope" width="600" height="200"></canvas>
+            </div>
+        
+            <div class="vis2">
+                <p> FFT visualization for frequency analysis </p>
+                <canvas id="fftCanvas" width="600" height="200"></canvas>
+        
+            </div>
+        
+        </div>
     </div>
 
-     <!-- Text area to display active oscillators -->
-     <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
-    
-<tr></tr>
-     <canvas id="oscilloscope" width="600" height="200"></canvas>
-
     <footer>
-        <p>Footer</p>
+        <p id="txt">By : Alexis Orjuela, Linus Jansson, Karl Kostoulas & Deema Abo Gheda.</p>
     </footer>
 
 </body>
