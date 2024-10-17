@@ -121,11 +121,27 @@ footer {
 }
 
 
+.container-info{
+  display: flex;
+  justify-content: space-between;
+}
+.keysPlaying, .keyBindingsInfo{
+  width: 48%;
+
+}
+.keyBindingsInfo{
+ 
+  font-size:14px;
+
+}
+
 #oscilloscope, #fftCanvas{
   font-family: 'Courier New', Courier, monospace;
   border: 2px solid #7c7b7b83;
-  border-radius: 8px; /* Rounded corners */
+  border-radius: 4px; /* Rounded corners */
   display: block; /* Ensures the canvas takes up the full wrapper space */
+  width: 100%; /* Ensures canvas fills the container */
+  height: auto; /* Maintains aspect ratio */
 }
 
 .control-section {

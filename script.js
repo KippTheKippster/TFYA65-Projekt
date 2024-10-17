@@ -26,7 +26,7 @@ function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune =
     //console.log("Playing sound, freq: ", frequency, " holdTime: ", holdTime)
     // Create an OscillatorNode
     const oscillator = createOscillator(frequency, holdTime, type, detune)
-    
+
     connectNodeToMain(oscillator, gain)
     // Connect the oscillator to the destination (speakers)
     //oscillator.connect(audioContext.destination);
@@ -38,8 +38,7 @@ function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune =
 }
 
 
-function createOscillator(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune = 0.0)
-{
+function createOscillator(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune = 0.0) {
     const oscillator = audioContext.createOscillator();
     oscillator.type = type; // Type of wave: sine, square, sawtooth, triangle
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in Hz
@@ -49,8 +48,7 @@ function createOscillator(frequency = 440.0, holdTime = 1000.0, type = 'sine', d
 
 
 
-function addOscillatorToQueue(oscillator, frequency, holdTime)
-{
+function addOscillatorToQueue(oscillator, frequency, holdTime) {
     // Add the oscillator to the list of active oscillators with its start time and hold time
     const startTime = audioContext.currentTime;
     activeOscillators.push({ oscillator, frequency, startTime, holdTime });
@@ -66,7 +64,7 @@ function addOscillatorToQueue(oscillator, frequency, holdTime)
     // Update the oscillator queue display
     updateOscillatorQueue();
     drawWaveform();
-    drawFrequency(); 
+    drawFrequency();
 }
 
 function drawFrequency() {
@@ -80,22 +78,60 @@ function drawFrequency() {
     analyser.getByteFrequencyData(dataArray);
 
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    ctx.fillStyle = 'rgb(0,0,0)';
 
-    const barWidth = (WIDTH / bufferLength) * 2.5;
-    let barHeight;
-    let x = 0;
+    // Define margins for axis labels
+    const margin = 40;
+    const axisBottom = HEIGHT - margin; // space for X-axis labels
 
+    // Draw axes
+    ctx.beginPath();
+    ctx.moveTo(margin, 0); // Start of Y-axis
+    ctx.lineTo(margin, axisBottom); // End of Y-axis
+    ctx.moveTo(margin, axisBottom); // Start of X-axis
+    ctx.lineTo(WIDTH - margin, axisBottom); // End of X-axis
+    ctx.stroke();
+
+    // Draw bars for frequency data
+    const barWidth = (WIDTH - 2 * margin) / bufferLength;
+    let barHeight, x = margin + 1;
     for (let i = 0; i < bufferLength; i++) {
-        barHeight = dataArray[i] / 2;
-
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
-        ctx.fillRect(x, HEIGHT - barHeight, barWidth, barHeight);
-
+        barHeight = (dataArray[i] / 256) * (axisBottom - 10); // Scale bar height to canvas
+        ctx.fillStyle = `rgb(100, 50, ${barHeight})`;
+        ctx.fillRect(x, axisBottom - barHeight, barWidth, barHeight);
         x += barWidth + 1;
     }
 
-}
+    ctx.fillStyle = 'rgb(0, 0, 0)';
+    x = margin;
+   
+    // Draw frequency labels under X-axis at every 10th point
+    for (let i = 0; i < bufferLength; i += 80) { // Increment by 10
+        const label = Math.round(i * audioContext.sampleRate / analyser.fftSize);
+        ctx.fillText(label + ' Hz', x, axisBottom + 15); // Append 'Hz' for clarity
+        x += 80 * barWidth; // Move x position by 10 bar widths
+    }
 
+    
+     // Define the top margin for better alignment if necessary
+     const topMargin = 20; // Adjust if needed to avoid cutting off at the top
+
+     // Calculate the step size in pixels per 10% increment
+     const stepSize = (axisBottom - topMargin) / 10; // Divide the usable height by 10
+ 
+    for (let i = 1; i <= 10; i++) {
+        const label = i * 20; // Each label represents a 10% increment
+        const positionY = axisBottom - (i * stepSize); // Calculate the Y position based on the current increment
+        ctx.fillText(label + ' ', 20, positionY);
+    }
+
+    // Axis titles
+    ctx.fillText('Frequency (Hz)', WIDTH / 2, HEIGHT - 10); // X-axis title
+    ctx.save(); // Save the context state before rotating
+    ctx.rotate(-Math.PI / 2); // Rotate context for Y-axis title
+    ctx.fillText('Amplitude', -HEIGHT / 2, 15); // Y-axis title
+    ctx.restore(); // Restore original state
+}
 
 
 function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', width = 10.0) {
@@ -126,14 +162,14 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
     gain.gain.linearRampToValueAtTime(maxGain, attackEndTime)
     gain.gain.setTargetAtTime(maxGain * document.getElementById("sustainRange").value / 100, attackEndTime, decayDuration)
     gain.gain.setTargetAtTime(maxGain * document.getElementById("sustainRange").value / 100, attackEndTime, decayDuration)
-    
+
     setTimeout(() => {
         const releaseEndTime = audioContext.currentTime + releaseDuration
         gain.gain.setValueAtTime(gain.gain.value, audioContext.currentTime)
         gain.gain.linearRampToValueAtTime(0, releaseEndTime)
     }, holdTime);
 
-    connectNodeToMain(gain) 
+    connectNodeToMain(gain)
 
     a.start()
     b.start()
@@ -146,8 +182,7 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
 }
 
 
-function connectNodeToMain(node, gain = 1.0)
-{
+function connectNodeToMain(node, gain = 1.0) {
     const localGain = audioContext.createGain()
     localGain.gain.value = gain
 
@@ -158,7 +193,7 @@ function connectNodeToMain(node, gain = 1.0)
 
     // Connect the oscillator to the analyser and then to the destination
     const delay = audioContext.createDelay()
-    delay.delayTime.value = gateScale * tempo / 1000 ;
+    delay.delayTime.value = gateScale * tempo / 1000;
 
     const feedback = audioContext.createGain();
     feedback.gain.value = document.getElementById("feedbackRange").value / 100;
@@ -169,7 +204,7 @@ function connectNodeToMain(node, gain = 1.0)
     filter.frequency.setValueAtTime(10000000, audioContext.currentTime);
     localGain.connect(filter)
 
-    
+
     filter.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
     filter.connect(delay); // Connect oscillator to the GainNode (volume slider)
     delay.connect(feedback)
@@ -349,31 +384,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.getElementById('arpeggiatorPlaymode').addEventListener('click', function()
-    {
+    document.getElementById('arpeggiatorPlaymode').addEventListener('click', function () {
         playMode = document.getElementById('arpeggiatorPlaymode').value
         updatePlayModeFreqs()
     })
 
-    document.getElementById("unisonWidthRange").addEventListener('input', function()
-    {
+    document.getElementById("unisonWidthRange").addEventListener('input', function () {
         unisonWidth = document.getElementById('unisonWidthRange').value
     })
 
-    document.getElementById('waveFormType').addEventListener('click', function()
-    {
+    document.getElementById('waveFormType').addEventListener('click', function () {
         currentWaveType = document.getElementById('waveFormType').value
     })
-    document.getElementById('tempoRange').addEventListener('input', function()
-    {
+    document.getElementById('tempoRange').addEventListener('input', function () {
         tempo = 400 - document.getElementById('tempoRange').value + 75
     })
-    document.getElementById('gateRange').addEventListener('input', function()
-    {
+    document.getElementById('gateRange').addEventListener('input', function () {
         gateScale = document.getElementById('gateRange').value / 100.0
     })
-    document.getElementById('octaveRange').addEventListener('input', function()
-    {
+    document.getElementById('octaveRange').addEventListener('input', function () {
         var value = Math.max(document.getElementById('octaveRange').value, 1)
         document.getElementById('octaveRange').value = value
         octaveTarget = value
@@ -444,39 +473,96 @@ function addOvertone() {
 
 function drawWaveform() {
     const canvas = document.getElementById('oscilloscope');
-    const canvasCtx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
+    const bufferLength = dataArray.length; // dataArray should be filled with audio data
+
+    function calculateZoomY() {
+        let max = 0;
+        // Find max amplitude to scale the waveform properly
+        dataArray.forEach(v => {
+            let amplitude = Math.abs(v - 128); // Assuming 8-bit unsigned data, adjust if your data range is different
+            if (amplitude > max) max = amplitude;
+        });
+        return (canvas.height / 2) / max; // Ensuring we use half the canvas height for max amplitude
+    }
+
+
+    // Assume a sample rate to calculate the time span represented in the buffer
+    const sampleRate = 44100; // Common sample rate in Hz for audio data
+    const totalDurationMs = (bufferLength / sampleRate) * 1000; // Convert duration to milliseconds
 
     function draw() {
         requestAnimationFrame(draw);
         analyser.getByteTimeDomainData(dataArray);
 
-        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
-        canvasCtx.fillRect(0, 0, canvas.clientWidth, canvas.height);
+        const zoomFactorY = calculateZoomY(dataArray);
 
-        canvasCtx.lineWidth = 2;
-        canvasCtx.strokeStyle = 'rgb(0,0,0)';
-        canvasCtx.beginPath();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const sliceWidth = canvas.width * 1.0 / bufferLength;
+        // Draw axes for clarity
+        ctx.strokeStyle = 'rgba(0, 0, 0, 1)';  // Black color for better visibility
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
+
+         // Y-axis in the middle
+         ctx.beginPath();
+         ctx.moveTo(canvas.width / 2, 0);
+         ctx.lineTo(canvas.width / 2, canvas.height);
+         ctx.stroke();
+ 
+         // X-axis in the middle
+         ctx.beginPath();
+         ctx.moveTo(0, canvas.height / 2);
+         ctx.lineTo(canvas.width, canvas.height / 2);
+         ctx.stroke();
+         
+        // Draw the waveform
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgb(0, 0, 255)'; // Blue color for waveform
+        ctx.beginPath();
+
+        const sliceWidth = canvas.width / bufferLength;
         let x = 0;
-        for (let i = 0; i < bufferLength; i++) {
-            const v = dataArray[i] / 128.0;
-            const y = v * canvas.height / 2;
 
-            if (i == 0) {
-                canvasCtx.moveTo(x, y); // Corrected here
+        for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0 - 1; // Normalize data to range [-1, 1]
+            const y = (v * zoomFactorY + 1) * (canvas.height / 2); // Scale and center the waveform
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
             } else {
-                canvasCtx.lineTo(x, y);
+                ctx.lineTo(x, y);
             }
 
             x += sliceWidth;
         }
-        canvasCtx.lineTo(canvas.width, canvas.height / 2);
-        canvasCtx.stroke();
 
+        ctx.stroke();
+
+        // Adding numerical labels for the Y-axis
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('1.0', canvas.width / 2 - 10, 10);
+        ctx.fillText('0.0', canvas.width / 2 - 10, canvas.height / 2);
+        ctx.fillText('-1.0', canvas.width / 2 - 10, canvas.height - 10);
+
+        // Adding numerical labels for the X-axis
+        const numLabels = Math.floor(totalDurationMs / 5); // Calculate number of 5 ms intervals
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top'; // Adjust text alignment to top to draw below the axis
     }
+
     draw();
 }
+
+
 
 let currentWaveType = "sine"
 let unisonWidth = 0
@@ -493,48 +579,39 @@ let octaveTarget = 1
 let currentOctave = 0
 let gateScale = 0.5
 
-function startArpeggiator()
-{
+function startArpeggiator() {
     arpeggiatorTimeout = setTimeout(playNextNote, tempo)
 }
 
-function stopArpeggiator() 
-{
-    if (arpeggiatorTimeout != null)
-    {
+function stopArpeggiator() {
+    if (arpeggiatorTimeout != null) {
         clearInterval(arpeggiatorTimeout)
         arpeggiatorTimeout = null
     }
 }
 
 
-function playNextNote()
-{
+function playNextNote() {
     let index = noteIndex % freqs.length
-    if (index >= freqs.length - 1)
-    {
+    if (index >= freqs.length - 1) {
         currentOctave += 1
         currentOctave = currentOctave % octaveTarget
     }
     //currentOctave = Math.floor(noteIndex / freqs.length) % octaveTarget
     //currentOctave = 0
     //console.log(index, " : ", freqs[index])
-    if (inputFreqs.length > 0)
-    {
-        if (playMode == 'random')
-        {
+    if (inputFreqs.length > 0) {
+        if (playMode == 'random') {
             index = Math.floor(Math.random() * (freqs.length))
         }
-        if (unisonWidth == 0)
-        {
+        if (unisonWidth == 0) {
             playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType)
         }
-        else
-        {
+        else {
             playCustomSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType, unisonWidth)
         }
     }
-    
+
     prevNoteIndex = index
     noteIndex += 1
     arpeggiatorTimeout = setTimeout(playNextNote, tempo)
@@ -543,15 +620,15 @@ function playNextNote()
 //const synthKeys = document.querySelectorAll(".key"); // Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Simple_synth
 const keyCodes = [
     "KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Comma", "Period", "Slash", "ShiftRight",
-  "KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "Enter",
-  "Tab", "KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP", "BracketLeft", "BracketRight",
-  "Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0", "Minus", "Equal", "Backspace",
-  "Escape",
+    "KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "Enter",
+    "Tab", "KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP", "BracketLeft", "BracketRight",
+    "Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0", "Minus", "Equal", "Backspace",
+    "Escape",
 ];
 
 
 const noteFreqs = [
-    16.352 ,	
+    16.352,
     17.324,
     18.354,
     19.445,
@@ -559,24 +636,24 @@ const noteFreqs = [
     21.827,
     23.125,
     24.500,
-    25.957, 
+    25.957,
     27.500,
     29.135,
     30.868
 ]
 
 const noteNames = [
-    'C', 	
-    'C#', 
-    'D', 
-    'D#', 
-    'E', 
-    'F', 
-    'F#', 
-    'G' ,
-    'G#' ,
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
     'A',
-    'A#', 	
+    'A#',
     'B',
 ]
 
@@ -589,12 +666,11 @@ function keyNote(event) {
     console.log(noteNames[noteIndex] + octave)
     if (!isNaN(freq)) {
         if (event.type === "keydown") {
-            if (inputFreqs.indexOf(freq) == -1)
-            {
+            if (inputFreqs.indexOf(freq) == -1) {
                 inputFreqs.push(freq)
             }
         } else {
-            inputFreqs = inputFreqs.filter(function(currentFreq) {
+            inputFreqs = inputFreqs.filter(function (currentFreq) {
                 return currentFreq != freq;
             });
         }
@@ -602,16 +678,14 @@ function keyNote(event) {
         updatePlayModeFreqs()
         var text = "Keys: "
         inputFreqs.forEach(element => {
-            for (let i = 1; i < 10; i++)
-            {
+            for (let i = 1; i < 10; i++) {
                 let index = noteFreqs.indexOf(element / Math.pow(2, i))
-                if (index != -1)
-                {
+                if (index != -1) {
                     text += noteNames[index] + i + " "
                     break
                 }
             }
-        }); 
+        });
         document.getElementById("keysPlaying").textContent = text
         //event.preventDefault();
     }
@@ -621,52 +695,45 @@ addEventListener("keydown", keyNote);
 addEventListener("keyup", keyNote);
 
 
-function notePressed(event) 
-{
+function notePressed(event) {
     if (event.buttons & 1) {
         const dataset = event.target.dataset;
 
         if (!dataset["pressed"] && dataset["octave"]) {
-        const octave = Number(dataset["octave"]);
-        oscList[octave][dataset["note"]] = playTone(dataset["frequency"]);
-        dataset["pressed"] = "yes";
+            const octave = Number(dataset["octave"]);
+            oscList[octave][dataset["note"]] = playTone(dataset["frequency"]);
+            dataset["pressed"] = "yes";
         }
     }
 }
 
-function noteReleased(event) 
-{
+function noteReleased(event) {
     const dataset = event.target.dataset;
 
     if (dataset && dataset["pressed"]) {
         const octave = Number(dataset["octave"]);
 
         if (oscList[octave] && oscList[octave][dataset["note"]]) {
-        oscList[octave][dataset["note"]].stop();
-        delete oscList[octave][dataset["note"]];
-        delete dataset["pressed"];
+            oscList[octave][dataset["note"]].stop();
+            delete oscList[octave][dataset["note"]];
+            delete dataset["pressed"];
         }
     }
 }
 
 
-function updatePlayModeFreqs()
-{
-    if (playMode == "up")
-    {
+function updatePlayModeFreqs() {
+    if (playMode == "up") {
         freqs = inputFreqs
     }
-    else if (playMode == "down")
-    {
+    else if (playMode == "down") {
         freqs = Array.from(inputFreqs).reverse()
     }
-    else if (playMode == "updown")
-    {
+    else if (playMode == "updown") {
         freqs = inputFreqs.concat(Array.from(inputFreqs).reverse())
     }
-    else
-    {
+    else {
         freqs = inputFreqs
     }
-    
+
 }

@@ -143,13 +143,28 @@
     </div>
 
     <div>
+        <div class="container-info">
+            <div class="keysPlaying">
 
-        <!-- Text area to display active oscillators -->
-        <p> OBS! you can use your own keyborad as Musical keyboard</p>
-        <p id="keysPlaying"></p>
-
-        <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
-       
+            <!-- Text area to display active oscillators -->
+            <p id="keysPlaying"></p>
+                <textarea id="oscillatorQueue" rows="10" cols="50" readonly></textarea>
+            </div>
+            <div id="keyBindingsInfo">
+                <h2>Key Bindings</h2>
+                <p>Each key on your keyboard is mapped to a musical note in a specific octave. Here are the key bindings:</p>
+                <ul>
+                  <li><strong>Q</strong>: Plays the note <strong>C</strong> in octave 4 (frequency 440 Hz)</li>
+                  <li><strong>W</strong>: Plays the note <strong>C#</strong> in octave 4 (frequency 466.16 Hz)</li>
+                  <li><strong>Z</strong>: Plays the note <strong>C</strong> in octave 0 (frequency 16.35 Hz)</li>
+                  <li><strong>E</strong>: Plays the note <strong>D</strong> in octave 4</li>
+                  <li><strong>R</strong>: Plays the note <strong>D#</strong> in octave 4</li>
+                  <!-- Add more keys as you bind them in the script -->
+                </ul>
+                <p>If you continue pressing keys past the available notes, the index will loop back to the beginning, and the frequency will automatically double, shifting the note to a higher octave.</p>
+              </div>
+              
+        </div>
         <h2>Real-Time Oscilloscope</h2>
 
         <div class="contanier-vis">
@@ -157,13 +172,13 @@
                 <p>Visualize the audio signal with various effects applied.</p>
                 <canvas id="oscilloscope" width="600" height="200"></canvas>
             </div>
-        
+
             <div class="vis2">
                 <p> FFT visualization for frequency analysis </p>
-                <canvas id="fftCanvas" width="600" height="200"></canvas>
-        
+                <canvas id="fftCanvas"  width="600" height="200"> </canvas>
+
             </div>
-        
+
         </div>
     </div>
 
