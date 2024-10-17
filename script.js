@@ -272,11 +272,7 @@ function updateOscillatorQueue() {
     }).join('\n');
 }
 
-// Function to close the popup
-function closePopup() {
-    document.getElementById('popup').style.display = 'none';
-    document.getElementById('popup-overlay').style.display = 'none';
-}
+
 
 // Add event listener to the buttons
 document.addEventListener("DOMContentLoaded", () => {
