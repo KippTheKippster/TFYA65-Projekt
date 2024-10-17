@@ -79,17 +79,27 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
     b.connect(gain)
     c.connect(gain)
 
-    const stage_max_time = 2
 
     const currentTime = audioContext.currentTime
-    const attackDuration = document.getElementById("attackRange").value / 100 * holdTime / 1000
+    const attackDuration = document.getElementById("attackRange").value / 100
     const attackEndTime = currentTime + attackDuration
-    const decayDuration = document.getElementById("decayRange").value / 100 * holdTime / 1000
+    const decayDuration = document.getElementById("decayRange").value / 100
+    const releaseDuration = document.getElementById("releaseRange").value / 100
+
+    console.log(releaseDuration)
+
     const totalDuration = attackDuration + decayDuration
 
     gain.gain.setValueAtTime(0, currentTime)
     gain.gain.linearRampToValueAtTime(maxGain, attackEndTime)
     gain.gain.setTargetAtTime(maxGain * document.getElementById("sustainRange").value / 100, attackEndTime, decayDuration)
+    gain.gain.setTargetAtTime(maxGain * document.getElementById("sustainRange").value / 100, attackEndTime, decayDuration)
+    
+    setTimeout(() => {
+        const releaseEndTime = audioContext.currentTime + releaseDuration
+        gain.gain.setValueAtTime(gain.gain.value, audioContext.currentTime)
+        gain.gain.linearRampToValueAtTime(0, releaseEndTime)
+    }, holdTime);
 
     connectNodeToMain(gain) 
 
@@ -97,9 +107,9 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
     b.start()
     c.start()
 
-    addOscillatorToQueue(a, frequency, totalDuration * 1000)
-    addOscillatorToQueue(b, frequency, totalDuration * 1000)
-    addOscillatorToQueue(c, frequency, totalDuration * 1000)
+    addOscillatorToQueue(a, frequency, holdTime + releaseDuration * 1000)
+    addOscillatorToQueue(b, frequency, holdTime + releaseDuration * 1000)
+    addOscillatorToQueue(c, frequency, holdTime + releaseDuration * 1000)
 
 }
 
@@ -116,7 +126,7 @@ function connectNodeToMain(node, gain = 1.0)
 
     // Connect the oscillator to the analyser and then to the destination
     const delay = audioContext.createDelay()
-    delay.delayTime.value = gateScale * tempo / 1000;
+    delay.delayTime.value = gateScale * tempo / 1000 ;
 
     const feedback = audioContext.createGain();
     feedback.gain.value = document.getElementById("feedbackRange").value / 100;
