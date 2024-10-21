@@ -13,14 +13,13 @@ const gainNode = audioContext.createGain();
 
 const analyser = audioContext.createAnalyser();
 analyser.fftSize = 1024;
-gainNode.connect(analyser);
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 
-const audioSource = audioContext.createOscillator(); // Define your audio source
-audioSource.connect(analyser); // Then connect it to the analyser
-analyser.connect(audioContext.destination);
-gainNode.connect(analyser);
+//const audioSource = audioContext.createOscillator(); // Define your audio source
+//audioSource.connect(analyser); // Then connect it to the analyser
+//analyser.connect(audioContext.destination);
+//gainNode.connect(analyser);
 
 // Function to play a sound
 function playSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', detune = 0.0, gain = 1.0) {
@@ -49,7 +48,7 @@ function createOscillator(frequency = 440.0, holdTime = 1000.0, type = 'sine', d
 
 
 
-function addOscillatorToQueue(oscillator, frequency, holdTime) {
+function addOscillatorToQueue(oscillator, frequency, holdTime, func = null) {
     // Add the oscillator to the list of active oscillators with its start time and hold time
     const startTime = audioContext.currentTime;
     activeOscillators.push({ oscillator, frequency, startTime, holdTime });
@@ -57,15 +56,20 @@ function addOscillatorToQueue(oscillator, frequency, holdTime) {
     // Stop the oscillator after the specified hold time
     setTimeout(() => {
         oscillator.stop();
+        oscillator.disconnect()
+        delete oscillator
+        if (func != null)
+        {
+            func()
+        }
         // Remove the oscillator from the list of active oscillators
         activeOscillators = activeOscillators.filter(osc => osc.oscillator !== oscillator);
         updateOscillatorQueue();
     }, holdTime);
 
+    
     // Update the oscillator queue display
     updateOscillatorQueue();
-    drawWaveform();
-    drawFrequency();
 }
 
 function drawFrequency() {
@@ -184,7 +188,21 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
         c.start()
     }
 
-    addOscillatorToQueue(a, frequency, holdTime + releaseDuration * 1000)
+    addOscillatorToQueue(a, frequency, holdTime + releaseDuration * 1000, function()
+    {
+        a.stop()
+        a.disconnect()
+        delete a
+        if (width > 0)
+        {
+            b.stop()
+            b.disconnect()
+            delete b
+            c.stop()
+            c.disconnect()
+            delete c
+        }
+    })
     if (width > 0)
     {
         addOscillatorToQueue(b, frequency, holdTime + releaseDuration * 1000)
@@ -233,11 +251,14 @@ function updateEffects()
     if (cutoffValue == maxCutoff)
     {
         gainNode.connect(audioContext.destination)
+        gainNode.connect(analyser);
     }
     else
     {
         gainNode.connect(filter)
-        filter.connect(audioContext.destination);   
+        filter.connect(audioContext.destination); 
+        filter.connect(analyser);
+
     }
     //delay.connect(feedback)
     //feedback.connect(delay)
@@ -341,6 +362,8 @@ function updateOscillatorQueue() {
 // Add event listener to the buttons
 document.addEventListener("DOMContentLoaded", () => {
     updateEffects()
+    drawWaveform()
+    drawFrequency()
     document.getElementById('stopButton').addEventListener('click', function () {
         stopAllSounds();
     });
