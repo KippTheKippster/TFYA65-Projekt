@@ -195,6 +195,16 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
 
 function connectNodeToMain(node)
 {
+    const delay = audioContext.createDelay()
+    delay.delayTime.value = gateScale * tempo / 1000;
+    const feedback = audioContext.createGain();
+    feedback.gain.value = document.getElementById("feedbackRange").value / 100;
+
+    delay.connect(feedback)
+    feedback.connect(delay)
+    feedback.connect(gainNode)
+
+    node.connect(delay)
     node.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
     // Connect the oscillator to the destination (speakers)
     //oscillator.connect(audioContext.destination);
@@ -211,13 +221,24 @@ function updateEffects()
     //feedback.gain.value = document.getElementById("feedbackRange").value / 100;
     //filter.type = 'lowpass'
     //filter.frequency.setTargetAtTime(2000, audioContext.currentTime, 0)
+    gainNode.disconnect()
+
     const filter = audioContext.createBiquadFilter()
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(1000000, audioContext.currentTime);
+    let maxCutoff = 10000
+    let cutoffValue = (1 - (document.getElementById('cutoffRange').value / 100)) * maxCutoff
+    filter.frequency.setValueAtTime(cutoffValue, audioContext.currentTime);
     //filter.Q.setValueAtTime(100, audioContext.currentTime)
     //filter.gain.setValueAtTime(-1, audioContext.currentTime)
-    gainNode.connect(filter)
-    filter.connect(audioContext.destination); // Connect oscillator to the GainNode (volume slider)
+    if (cutoffValue == maxCutoff)
+    {
+        gainNode.connect(audioContext.destination)
+    }
+    else
+    {
+        gainNode.connect(filter)
+        filter.connect(audioContext.destination);   
+    }
     //delay.connect(feedback)
     //feedback.connect(delay)
     //feedback.connect(gainNode)
@@ -398,6 +419,27 @@ document.addEventListener("DOMContentLoaded", () => {
         updatePlayModeFreqs()
     })
 
+
+    document.getElementById('presetSelect').value = "0"
+    document.getElementById('presetSelect').addEventListener('input', function () {
+        if (document.getElementById('presetSelect').value == 1)
+        {
+            document.getElementById("unisonWidthRange").value = 5
+            unisonWidth = 5
+            document.getElementById("releaseRange").value = 10
+            document.getElementById("attackRange").value = 5
+            document.getElementById("waveFormType").value = 'sawtooth'
+            currentWaveType = 'sawtooth'
+            tempo = 150
+            document.getElementById('octaveRange').value = 2
+            octaveTarget = 2
+            document.getElementById('arpeggiatorPlaymode').value = "up&down"
+            playMode = "up&down"
+            document.getElementById('cutoffRange').value = 20
+
+        }
+    })
+
     document.getElementById("unisonWidthRange").addEventListener('input', function () {
         unisonWidth = document.getElementById('unisonWidthRange').value
     })
@@ -410,6 +452,9 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     document.getElementById('gateRange').addEventListener('input', function () {
         gateScale = document.getElementById('gateRange').value / 100.0
+    })
+    document.getElementById('cutoffRange').addEventListener('input', function () {
+        updateEffects()
     })
     document.getElementById('octaveRange').addEventListener('input', function () {
         var value = Math.max(document.getElementById('octaveRange').value, 1)
@@ -534,7 +579,7 @@ function drawWaveform() {
         ctx.strokeStyle = 'rgb(0, 0, 255)'; // Blue color for waveform
         ctx.beginPath();
 
-        const sliceWidth = canvas.width / bufferLength;
+        const sliceWidth = canvas.width / (bufferLength / 2);
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
