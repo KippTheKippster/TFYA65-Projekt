@@ -364,6 +364,17 @@ document.addEventListener("DOMContentLoaded", () => {
     updateEffects()
     drawWaveform()
     drawFrequency()
+    document.getElementById('hideInfoCheckbox').addEventListener('click', function () {
+        let checked = document.getElementById('hideInfoCheckbox').checked
+        if (checked)
+        {
+            document.getElementById("containerInfo").style.display = "none";
+        }
+        else
+        {
+            document.getElementById("containerInfo").style.display = "block";
+        }
+    })
     document.getElementById('stopButton').addEventListener('click', function () {
         stopAllSounds();
     });
