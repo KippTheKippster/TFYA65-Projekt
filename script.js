@@ -9,10 +9,11 @@ let positionInArray = null;
 
 // Create a GainNode (volume slider)
 const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
+//gainNode.connect(audioContext.destination);
 
 const analyser = audioContext.createAnalyser();
 analyser.fftSize = 1024;
+gainNode.connect(analyser);
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 
@@ -68,27 +69,32 @@ function addOscillatorToQueue(oscillator, frequency, holdTime)
 
 function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', width = 10.0) {
 
-    const a = createOscillator(frequency, holdTime, type, 0)
-    const b = createOscillator(frequency, holdTime, type, width)
-    const c = createOscillator(frequency, holdTime, type, -width)
+    let a = createOscillator(frequency, holdTime, type, 0)
+    let b = null
+    let c = null
+    if (width > 0)
+    {
+        b = createOscillator(frequency, holdTime, type, width)
+        c = createOscillator(frequency, holdTime, type, -width)
+    }
 
     const gain = audioContext.createGain()
-    const maxGain = 0.33
+    let maxGain = 1
+    if (width > 0)
+        maxGain = 0.3333 
     gain.gain.value = maxGain
     a.connect(gain)
-    b.connect(gain)
-    c.connect(gain)
-
+    if (width > 0)
+    {
+        b.connect(gain)
+        c.connect(gain)
+    }
 
     const currentTime = audioContext.currentTime
     const attackDuration = document.getElementById("attackRange").value / 100
     const attackEndTime = currentTime + attackDuration
     const decayDuration = document.getElementById("decayRange").value / 100
     const releaseDuration = document.getElementById("releaseRange").value / 100
-
-    console.log(releaseDuration)
-
-    const totalDuration = attackDuration + decayDuration
 
     gain.gain.setValueAtTime(0, currentTime)
     gain.gain.linearRampToValueAtTime(maxGain, attackEndTime)
@@ -104,49 +110,49 @@ function playCustomSound(frequency = 440.0, holdTime = 1000.0, type = 'sine', wi
     connectNodeToMain(gain) 
 
     a.start()
-    b.start()
-    c.start()
+    if (width > 0)
+    {
+        b.start()
+        c.start()
+    }
 
     addOscillatorToQueue(a, frequency, holdTime + releaseDuration * 1000)
-    addOscillatorToQueue(b, frequency, holdTime + releaseDuration * 1000)
-    addOscillatorToQueue(c, frequency, holdTime + releaseDuration * 1000)
-
+    if (width > 0)
+    {
+        addOscillatorToQueue(b, frequency, holdTime + releaseDuration * 1000)
+        addOscillatorToQueue(c, frequency, holdTime + releaseDuration * 1000)
+    }
 }
 
 
-function connectNodeToMain(node, gain = 1.0)
+function connectNodeToMain(node)
 {
-    const localGain = audioContext.createGain()
-    localGain.gain.value = gain
+    node.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
+    // Connect the oscillator to the destination (speakers)
+    //oscillator.connect(audioContext.destination);
 
-    node.connect(localGain)
+}
 
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
+function updateEffects()
+{
     // Connect the oscillator to the analyser and then to the destination
-    const delay = audioContext.createDelay()
-    delay.delayTime.value = gateScale * tempo / 1000 ;
+    //const delay = audioContext.createDelay()
+    //delay.delayTime.value = gateScale * tempo / 1000 ;
 
-    const feedback = audioContext.createGain();
-    feedback.gain.value = document.getElementById("feedbackRange").value / 100;
+    //const feedback = audioContext.createGain();
+    //feedback.gain.value = document.getElementById("feedbackRange").value / 100;
     //filter.type = 'lowpass'
     //filter.frequency.setTargetAtTime(2000, audioContext.currentTime, 0)
     const filter = audioContext.createBiquadFilter()
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(10000000, audioContext.currentTime);
-    localGain.connect(filter)
-
-    
-    filter.connect(gainNode); // Connect oscillator to the GainNode (volume slider)
-    filter.connect(delay); // Connect oscillator to the GainNode (volume slider)
-    delay.connect(feedback)
-    feedback.connect(delay)
-    feedback.connect(gainNode)
-    gainNode.connect(analyser);
-    // Connect the oscillator to the destination (speakers)
-    //oscillator.connect(audioContext.destination);
-
+    filter.frequency.setValueAtTime(1000000, audioContext.currentTime);
+    //filter.Q.setValueAtTime(100, audioContext.currentTime)
+    //filter.gain.setValueAtTime(-1, audioContext.currentTime)
+    gainNode.connect(filter)
+    filter.connect(audioContext.destination); // Connect oscillator to the GainNode (volume slider)
+    //delay.connect(feedback)
+    //feedback.connect(delay)
+    //feedback.connect(gainNode)
 }
 
 // Function to set volume
@@ -156,9 +162,10 @@ function setVolume(volume) {
         console.error('Volume must be between 1 and 100');
         return;
     }
+    updateEffects()
 
     // Convert the volume from 1-100 to 0-1
-    gainNode.gain.value = volume / 100;
+    gainNode.gain.value = volume / 100; // TODO Convert from linear to db
 }
 
 function addVibrato(positionInArray) {
@@ -248,6 +255,7 @@ function closePopup() {
 
 // Add event listener to the buttons
 document.addEventListener("DOMContentLoaded", () => {
+    updateEffects()
     document.getElementById('stopButton').addEventListener('click', function () {
         stopAllSounds();
     });
@@ -497,18 +505,12 @@ function playNextNote()
         {
             index = Math.floor(Math.random() * (freqs.length))
         }
-        if (unisonWidth == 0)
-        {
-            playSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType)
-        }
-        else
-        {
-            playCustomSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType, unisonWidth)
-        }
+        playCustomSound(freqs[index] * Math.pow(2, currentOctave), tempo * gateScale, currentWaveType, unisonWidth)
     }
     
     prevNoteIndex = index
     noteIndex += 1
+    clearTimeout(arpeggiatorTimeout)
     arpeggiatorTimeout = setTimeout(playNextNote, tempo)
 }
 
@@ -558,7 +560,6 @@ function keyNote(event) {
     let noteIndex = keyIndex % 12
     let octave = Math.floor(keyIndex / 12.0) + 1
     let freq = noteFreqs[noteIndex] * Math.pow(2, octave)
-    console.log(noteNames[noteIndex] + octave)
     if (!isNaN(freq)) {
         if (event.type === "keydown") {
             if (inputFreqs.indexOf(freq) == -1)
@@ -570,7 +571,7 @@ function keyNote(event) {
                 return currentFreq != freq;
             });
         }
-        //inputFreqs = inputFreqs.sort(function(a,b) { return a - b;});
+        inputFreqs = inputFreqs.sort(function(a,b) { return a - b;});
         updatePlayModeFreqs()
         var text = "Keys: "
         inputFreqs.forEach(element => {
@@ -632,13 +633,20 @@ function updatePlayModeFreqs()
     {
         freqs = Array.from(inputFreqs).reverse()
     }
-    else if (playMode == "updown")
+    else if (playMode == "up/down")
     {
         freqs = inputFreqs.concat(Array.from(inputFreqs).reverse())
+    }
+    else if (playMode == "up&down")
+    {
+        let end = Array.from(inputFreqs).reverse()
+        end = end.slice(1)
+        end = end.slice(0, end.length - 1)
+        freqs = inputFreqs.concat(end)
     }
     else
     {
         freqs = inputFreqs
     }
-    
+
 }
